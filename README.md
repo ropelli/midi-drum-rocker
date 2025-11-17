@@ -7,4 +7,11 @@ The project has been tested in Linux only and with XBox 360 version of the drum 
 The drum set has a wired USB connection and needs to be plugged in before starting the program.
 The program presumes that the joystick device is located at `/dev/input/js1`
 and the virtual MIDI device is named `IonDrumBridge`.
-Only the cymbals, kick and pads are supported at the moment. The buttons haven't been mapped to anything.
+Only the cymbals, kick and pads are supported at the moment. The buttons haven't been mapped.
+
+
+You need to install dependencies even on top of go dependencies:
+```sh
+# On fedora:
+sudo dnf install alsa-lib-devel
+```
