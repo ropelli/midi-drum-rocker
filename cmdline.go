@@ -32,6 +32,22 @@ var launchCmd = &cobra.Command{
 	},
 }
 
+var recordCmd = &cobra.Command{
+	Use:   "record",
+	Short: "Record joystick events to a file",
+	Run: func(cmd *cobra.Command, args []string) {
+		record(getSettings(cmd))
+	},
+}
+
+var playCmd = &cobra.Command{
+	Use:   "play",
+	Short: "Play recorded joystick events from a file, sending MIDI messages",
+	Run: func(cmd *cobra.Command, args []string) {
+		play(getSettings(cmd))
+	},
+}
+
 func getSettings(cmd *cobra.Command) *Settings {
 	return &Settings{
 		joyName: cmd.Root().Flag("joy-name").Value.String(),
@@ -73,4 +89,5 @@ func init() {
 	rootCmd.AddCommand(launchCmd)
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(testMidiCmd)
+	rootCmd.AddCommand(recordCmd)
 }
