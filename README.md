@@ -18,7 +18,7 @@ Also, velocity is not supported, so the drum set will always send maximum veloci
 
 ```sh
 # Foreground mode
-./midi-drum-rocker
+./midi-drum-rocker run
 
 # Command line help
 ./midi-drum-rocker --help
