@@ -13,6 +13,17 @@ import (
 var drv *rtmididrv.Driver
 var out drivers.Out
 
+const (
+	NOTE_KICK  = 36
+	NOTE_SNARE = 38
+	NOTE_HIHAT = 42
+	NOTE_TOM1  = 47
+	NOTE_TOM2  = 48
+	NOTE_TOM3  = 41
+	NOTE_CRASH = 49
+	NOTE_RIDE  = 50
+)
+
 func initMIDI() {
 	var err error
 	drv, err = rtmididrv.New()
@@ -41,14 +52,14 @@ func sendNote(note, vel uint8, on bool) {
 	}
 }
 
-func main3() {
+func testMidi() {
 	initMIDI()
 	defer func() {
 		out.Close()
 		drv.Close()
 	}()
 
-	fmt.Println("Sending test hits every 1s...")
+	fmt.Println("Sending test snare hits every 1s...")
 	for {
 		sendNote(38, 100, true) // snare on
 		time.Sleep(1000 * time.Millisecond)

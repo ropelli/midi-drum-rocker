@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log"
+	"os"
 	"slices"
+	"strings"
 
 	"github.com/0xcafed00d/joystick"
 )
@@ -75,19 +79,57 @@ func containsSameColorCymbal(messages []int, color int) bool {
 	}
 }
 
-func main() {
-	js, err := joystick.Open(1)
+func findIonDrumJoystick(name string) (joystick.Joystick, error) {
+	numJoysticks := 0
+	joystickPath := "/dev/input"
+	// get the number of joysticks by checking for existing device files by direct file access
+	entries, err := os.ReadDir(joystickPath)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to read joystick directory: %v", err)
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		if entry.Name()[:2] == "js" {
+			numJoysticks++
+		}
+	}
+
+	log.Println("Found joystick entries:", numJoysticks)
+
+	for id := range numJoysticks {
+		js, err := joystick.Open(id)
+		if err != nil || js == nil {
+			log.Printf("Failed to open joystick %d: %v\n", id, err)
+			continue
+		}
+		log.Printf("Joystick %d: %s\n", id, js.Name())
+		if strings.Contains(js.Name(), "Ion Drum Rocker") {
+			return js, nil
+		}
+		js.Close()
+	}
+	return nil, fmt.Errorf("%s joystick not found", name)
+}
+
+func main() {
+	parseArgs()
+}
+
+func run(ctx context.Context, settings *Settings) {
+	js, err := findIonDrumJoystick(settings.joyName)
+	if err != nil {
+		log.Fatal(err)
 	}
 	defer js.Close()
 
-	fmt.Printf("Joystick Name: %s", js.Name())
-	fmt.Printf("   Axis Count: %d", js.AxisCount())
-	fmt.Printf(" Button Count: %d\n", js.ButtonCount())
+	log.Printf("Joystick Name: %s", js.Name())
+	log.Printf("   Axis Count: %d", js.AxisCount())
+	log.Printf(" Button Count: %d\n", js.ButtonCount())
 	prevState, err := js.Read()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	initMIDI()
@@ -97,9 +139,15 @@ func main() {
 	}()
 
 	for {
+		select {
+		case <-ctx.Done():
+			log.Println("Context canceled, exiting...")
+			return
+		default:
+		}
 		state, err := js.Read()
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 
 		xor := state.Buttons ^ prevState.Buttons
@@ -146,11 +194,11 @@ func main() {
 		}
 
 		if len(toPrint) > 0 {
-			fmt.Printf("Changed: ")
+			log.Printf("Changed: ")
 			for _, str := range toPrint {
-				fmt.Printf("%s", str)
+				log.Printf("%s", str)
 			}
-			fmt.Printf("\n")
+			log.Printf("\n")
 		}
 
 		if state.Buttons == kickConnectedMask || state.Buttons == 0 || state.Buttons == kickMask || state.Buttons == (kickMask|kickConnectedMask) {
@@ -185,35 +233,35 @@ func main() {
 				}
 			}
 
-			fmt.Println("Known messages:", knownMessages)
+			log.Println("Known messages:", knownMessages)
 			for _, msg := range knownMessages {
 				switch msg {
 				case RED:
-					sendNote(38, 100, true)
-				case BLUE:
-					sendNote(48, 100, true)
+					sendNote(NOTE_SNARE, 100, true)
 				case YELLOW:
-					sendNote(47, 100, true)
+					sendNote(NOTE_TOM1, 100, true)
+				case BLUE:
+					sendNote(NOTE_TOM2, 100, true)
 				case GREEN:
-					sendNote(41, 100, true)
-				case GREEN_CYMBAL:
-					sendNote(49, 100, true)
-				case BLUE_CYMBAL:
-					sendNote(50, 100, true)
+					sendNote(NOTE_TOM3, 100, true)
 				case YELLOW_CYMBAL:
-					sendNote(42, 100, true)
+					sendNote(NOTE_HIHAT, 100, true)
+				case BLUE_CYMBAL:
+					sendNote(NOTE_RIDE, 100, true)
+				case GREEN_CYMBAL:
+					sendNote(NOTE_CRASH, 100, true)
 				case KICK:
-					sendNote(36, 100, true)
+					sendNote(NOTE_KICK, 100, true)
 				}
 			}
 
-			fmt.Println("-------------")
+			log.Println("-------------")
 			knownMessages = []int{}
 			pendingMessages = []int{}
 		}
 
 		if state.Buttons != prevState.Buttons {
-			fmt.Printf("Buttons: %032b\n", state.Buttons)
+			log.Printf("Buttons: %032b\n", state.Buttons)
 			prevState = state
 		}
 	}
