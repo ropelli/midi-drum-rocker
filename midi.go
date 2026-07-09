@@ -31,7 +31,7 @@ func initMIDI() {
 		log.Fatalf("could not open ALSA MIDI driver: %v", err)
 	}
 
-	// Create a virtual MIDI output port visible to Hydrogen
+	// Create a virtual MIDI output port
 	out, err = drv.OpenVirtualOut("IonDrumBridge")
 	if err != nil {
 		log.Fatalf("could not open virtual MIDI out: %v", err)

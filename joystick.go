@@ -7,6 +7,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/0xcafed00d/joystick"
 )
@@ -105,7 +106,7 @@ func findIonDrumJoystick(name string) (joystick.Joystick, error) {
 			continue
 		}
 		log.Printf("Joystick %d: %s\n", id, js.Name())
-		if strings.Contains(js.Name(), "Ion Drum Rocker") {
+		if strings.Contains(js.Name(), name) {
 			return js, nil
 		}
 		js.Close()
@@ -117,12 +118,75 @@ type StateHandler interface {
 	Handle(state joystick.State) error
 }
 
+func listJoysticks(settings *Settings) {
+	numJoysticks := 0
+	joystickPath := "/dev/input"
+	// get the number of joysticks by checking for existing device files by direct file access
+	entries, err := os.ReadDir(joystickPath)
+	if err != nil {
+		log.Fatalf("failed to read joystick directory: %v", err)
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		if entry.Name()[:2] == "js" {
+			numJoysticks++
+		}
+	}
+
+	fmt.Println("Found joystick entries:", numJoysticks)
+
+	for id := range numJoysticks {
+		js, err := joystick.Open(id)
+		if err != nil || js == nil {
+			log.Printf("Failed to open joystick %d: %v\n", id, err)
+			continue
+		}
+		fmt.Printf("Joystick %d: %s\n", id, js.Name())
+		js.Close()
+	}
+}
+
 func play(settings *Settings) {}
 
 func record(settings *Settings) {
+	handler := &RecordStateHandler{}
+	loop(context.Background(), settings, handler)
+}
+
+type RecordStateHandler struct {
+	stream   *os.File
+	duration int64
+	prevTime int64
+}
+
+// just print out the state of the buttons into the stream
+func (h *RecordStateHandler) Handle(state joystick.State) error {
+	duration := time.Now().UnixMilli() - h.prevTime
+	if h.prevTime == 0 {
+		duration = 0
+	}
+	h.prevTime = time.Now().UnixMilli()
+	if duration > 0 {
+		_, err := fmt.Fprintf(h.stream, "duration: %d\n", duration)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	buttons := state.Buttons
+	if h.stream == nil {
+		h.stream = os.Stdout
+	}
+	_, err := fmt.Fprintf(h.stream, "buttons: %032b\n", buttons)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return nil
 }
 
 func bridge(ctx context.Context, settings *Settings) {
+	initMIDI()
 	handler := &BridgeStateHandler{}
 	loop(ctx, settings, handler)
 }
@@ -143,7 +207,6 @@ func loop(ctx context.Context, settings *Settings, handler StateHandler) {
 		log.Fatal(err)
 	}
 
-	initMIDI()
 	defer func() {
 		out.Close()
 		drv.Close()
@@ -166,6 +229,7 @@ func loop(ctx context.Context, settings *Settings, handler StateHandler) {
 			continue
 		}
 		handler.Handle(state)
+		prevState = state
 	}
 }
 
