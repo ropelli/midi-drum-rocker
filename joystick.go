@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -97,16 +99,17 @@ func findIonDrumJoystick(name string) (joystick.Joystick, error) {
 		}
 	}
 
-	log.Println("Found joystick entries:", numJoysticks)
+	slog.Info("Found joysticks", "amount", numJoysticks)
 
 	for id := range numJoysticks {
 		js, err := joystick.Open(id)
 		if err != nil || js == nil {
-			log.Printf("Failed to open joystick %d: %v\n", id, err)
+			slog.Error("Failed to open joystick", "id", strconv.Itoa(id), "error", err)
 			continue
 		}
-		log.Printf("Joystick %d: %s\n", id, js.Name())
-		if strings.Contains(js.Name(), name) {
+		jsName := strings.Trim(js.Name(), "\x00")
+		slog.Debug("Considered joystick", "id", id, "name", jsName)
+		if jsName == name {
 			return js, nil
 		}
 		js.Close()
@@ -118,13 +121,13 @@ type StateHandler interface {
 	Handle(state joystick.State) error
 }
 
-func listJoysticks(settings *Settings) {
+func listJoysticks(_ *Settings) {
 	numJoysticks := 0
 	joystickPath := "/dev/input"
 	// get the number of joysticks by checking for existing device files by direct file access
 	entries, err := os.ReadDir(joystickPath)
 	if err != nil {
-		log.Fatalf("failed to read joystick directory: %v", err)
+		log.Fatalln("FATAL failed to read joystick directory: ", err)
 	}
 	for _, entry := range entries {
 		if entry.IsDir() {
@@ -135,15 +138,16 @@ func listJoysticks(settings *Settings) {
 		}
 	}
 
-	fmt.Println("Found joystick entries:", numJoysticks)
+	slog.Info("Found joysticks", "amount", numJoysticks)
 
 	for id := range numJoysticks {
 		js, err := joystick.Open(id)
 		if err != nil || js == nil {
-			log.Printf("Failed to open joystick %d: %v\n", id, err)
+			slog.Error("Failed to open joystick", "id", id, "error", err)
 			continue
 		}
-		fmt.Printf("Joystick %d: %s\n", id, js.Name())
+		jsName := strings.Trim(js.Name(), "\x00")
+		fmt.Printf("Joystick %d: %s\n", id, jsName)
 		js.Close()
 	}
 }
@@ -171,7 +175,7 @@ func (h *RecordStateHandler) Handle(state joystick.State) error {
 	if duration > 0 {
 		_, err := fmt.Fprintf(h.stream, "duration: %d\n", duration)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalln("FATAL ", err)
 		}
 	}
 	buttons := state.Buttons
@@ -180,13 +184,16 @@ func (h *RecordStateHandler) Handle(state joystick.State) error {
 	}
 	_, err := fmt.Fprintf(h.stream, "buttons: %032b\n", buttons)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln("FATAL ", err)
 	}
 	return nil
 }
 
 func bridge(ctx context.Context, settings *Settings) {
-	initMIDI()
+	err := initMIDI(settings.midiName)
+	if err != nil {
+		log.Fatalln("FATAL ", err)
+	}
 	handler := &BridgeStateHandler{}
 	loop(ctx, settings, handler)
 }
@@ -194,17 +201,17 @@ func bridge(ctx context.Context, settings *Settings) {
 func loop(ctx context.Context, settings *Settings, handler StateHandler) {
 	js, err := findIonDrumJoystick(settings.joyName)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln("FATAL ", err)
 	}
 	defer js.Close()
 
-	log.Printf("Joystick Name: %s", js.Name())
-	log.Printf("   Axis Count: %d", js.AxisCount())
-	log.Printf(" Button Count: %d\n", js.ButtonCount())
+	jsName := strings.Trim(js.Name(), "\x00")
+	slog.Info("Got joystick", "name", jsName)
+	slog.Debug("Joystick", "axis count", js.AxisCount(), "button count", js.ButtonCount())
 	prevState, err := js.Read()
 	handler.Handle(prevState)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln("FATAL ", err)
 	}
 
 	defer func() {
@@ -215,13 +222,13 @@ func loop(ctx context.Context, settings *Settings, handler StateHandler) {
 	for {
 		select {
 		case <-ctx.Done():
-			log.Println("Context canceled, exiting...")
+			slog.Info("Context canceled, exiting...")
 			return
 		default:
 		}
 		state, err := js.Read()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalln("FATAL ", err)
 		}
 
 		xor := state.Buttons ^ prevState.Buttons
@@ -239,51 +246,47 @@ type BridgeStateHandler struct {
 
 func (h *BridgeStateHandler) Handle(state joystick.State) error {
 	xor := state.Buttons ^ h.prevState.Buttons
-	var toPrint []string = []string{}
+	var toPrint string
 	if xor&cymbalMask != 0 && state.Buttons&cymbalMask == cymbalMask {
-		toPrint = append(toPrint, "CYMBAL ")
+		toPrint = toPrint + "CYMBAL "
 		pendingMessages = append(pendingMessages, CYMBAL)
 	}
 	if xor&tomMask != 0 && state.Buttons&tomMask == tomMask {
-		toPrint = append(toPrint, "TOM ")
+		toPrint = toPrint + "TOM "
 		pendingMessages = append(pendingMessages, TOM)
 	}
 	if xor&greenMask != 0 && state.Buttons&greenMask == greenMask {
-		toPrint = append(toPrint, "GREEN ")
+		toPrint = toPrint + "GREEN "
 		pendingMessages = append(pendingMessages, GREEN)
 	}
 	if xor&redMask != 0 && state.Buttons&redMask == redMask {
-		toPrint = append(toPrint, "RED ")
+		toPrint = toPrint + "RED "
 		pendingMessages = append(pendingMessages, RED)
 	}
 	if xor&blueMask != 0 && state.Buttons&blueMask == blueMask {
-		toPrint = append(toPrint, "BLUE ")
+		toPrint = toPrint + "BLUE "
 		pendingMessages = append(pendingMessages, BLUE)
 	}
 	if xor&yellowMask != 0 && state.Buttons&yellowMask == yellowMask {
-		toPrint = append(toPrint, "YELLOW ")
+		toPrint = toPrint + "YELLOW "
 		pendingMessages = append(pendingMessages, YELLOW)
 	}
 	if xor&kickMask != 0 && state.Buttons&kickMask == kickMask {
-		toPrint = append(toPrint, "KICK ")
+		toPrint = toPrint + "KICK "
 		pendingMessages = append(pendingMessages, KICK)
 		knownMessages = append(knownMessages, KICK)
 	}
 	if xor&yellowCymbalModMask != 0 && state.Buttons&yellowCymbalModMask == yellowCymbalModMask {
-		toPrint = append(toPrint, "YCYMBAL MOD ")
+		toPrint = toPrint + "YCYMBAL MOD "
 		pendingMessages = append(pendingMessages, YELLOW_CYMBAL)
 	}
 	if xor&blueCymbalModMask != 0 && state.Buttons&blueCymbalModMask == blueCymbalModMask {
-		toPrint = append(toPrint, "BCYMBAL MOD ")
+		toPrint = toPrint + "BCYMBAL MOD "
 		pendingMessages = append(pendingMessages, BLUE_CYMBAL)
 	}
 
 	if len(toPrint) > 0 {
-		log.Printf("Changed: ")
-		for _, str := range toPrint {
-			log.Printf("%s", str)
-		}
-		log.Printf("\n")
+		slog.Debug("Changed", "buttons", toPrint)
 	}
 
 	if state.Buttons == kickConnectedMask || state.Buttons == 0 || state.Buttons == kickMask || state.Buttons == (kickMask|kickConnectedMask) {
@@ -318,7 +321,7 @@ func (h *BridgeStateHandler) Handle(state joystick.State) error {
 			}
 		}
 
-		log.Println("Known messages:", knownMessages)
+		slog.Debug("Known messages", "msgs", knownMessages)
 		for _, msg := range knownMessages {
 			switch msg {
 			case RED:
@@ -340,13 +343,13 @@ func (h *BridgeStateHandler) Handle(state joystick.State) error {
 			}
 		}
 
-		log.Println("-------------")
+		slog.Debug("-------------")
 		knownMessages = []int{}
 		pendingMessages = []int{}
 	}
 
 	if state.Buttons != h.prevState.Buttons {
-		log.Printf("Buttons: %032b\n", state.Buttons)
+		slog.Debug("Buttons", "state", fmt.Sprintf("%032b", state.Buttons))
 		h.prevState = state
 	}
 	return nil

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"time"
 
 	"gitlab.com/gomidi/midi/v2"
@@ -24,19 +26,19 @@ const (
 	NOTE_RIDE  = 50
 )
 
-func initMIDI() {
+func initMIDI(deviceName string) error {
 	var err error
 	drv, err = rtmididrv.New()
 	if err != nil {
-		log.Fatalf("could not open ALSA MIDI driver: %v", err)
+		return errors.New(fmt.Sprintf("could not open ALSA MIDI driver: %v", err))
 	}
-
 	// Create a virtual MIDI output port
-	out, err = drv.OpenVirtualOut("IonDrumBridge")
+	out, err = drv.OpenVirtualOut(deviceName)
 	if err != nil {
-		log.Fatalf("could not open virtual MIDI out: %v", err)
+		return errors.New(fmt.Sprintf("could not open virtual MIDI out: %v", err))
 	}
-	fmt.Println("Virtual MIDI port created:", out.String())
+	slog.Info("Virtual MIDI port created", "name", out.String())
+	return err
 }
 
 func sendNote(note, vel uint8, on bool) {
@@ -52,8 +54,11 @@ func sendNote(note, vel uint8, on bool) {
 	}
 }
 
-func testMidi() {
-	initMIDI()
+func testMidi(settings *Settings) {
+	err := initMIDI(settings.midiName)
+	if err != nil {
+		log.Fatalf("FATAL %v", err)
+	}
 	defer func() {
 		out.Close()
 		drv.Close()

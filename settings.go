@@ -1,5 +1,7 @@
 package main
 
 type Settings struct {
-	joyName string
+	joyName  string
+	midiName string
+	retry    bool
 }

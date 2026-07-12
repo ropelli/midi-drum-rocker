@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 
@@ -57,8 +59,16 @@ var listJoysCmd = &cobra.Command{
 }
 
 func getSettings(cmd *cobra.Command) *Settings {
+	bool, err := cmd.Root().Flags().GetBool("debug")
+	if err != nil {
+		panic(err)
+	}
+	if bool {
+		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})))
+	}
 	return &Settings{
-		joyName: cmd.Root().Flag("joy-name").Value.String(),
+		joyName:  cmd.Root().Flag("joy-name").Value.String(),
+		midiName: cmd.Root().Flag("midi-device").Value.String(),
 	}
 }
 
@@ -74,7 +84,7 @@ var testMidiCmd = &cobra.Command{
 	Use:   "test-midi",
 	Short: "Test sending MIDI messages",
 	Run: func(cmd *cobra.Command, args []string) {
-		testMidi()
+		testMidi(getSettings(cmd))
 	},
 }
 
@@ -88,12 +98,15 @@ func execCommand(args []string) {
 
 func parseArgs() {
 	if err := rootCmd.Execute(); err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
 
 func init() {
+	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug logging")
 	rootCmd.PersistentFlags().StringP("joy-name", "j", "Ion Drum Rocker", "Name of the joystick to use")
+	rootCmd.PersistentFlags().StringP("midi-device", "d", "IonDrumBridge", "Name of the midi device to create")
 	rootCmd.AddCommand(launchCmd)
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(testMidiCmd)
