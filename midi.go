@@ -50,14 +50,14 @@ func sendNote(note, vel uint8, on bool) {
 	}
 	err := out.Send(msg)
 	if err != nil {
-		log.Printf("send error: %v", err)
+		slog.Error("when seding midi message, got", "error", err)
 	}
 }
 
 func testMidi(settings *Settings) {
 	err := initMIDI(settings.midiName)
 	if err != nil {
-		log.Fatalf("FATAL %v", err)
+		log.Fatalln("FATAL ", err)
 	}
 	defer func() {
 		out.Close()

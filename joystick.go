@@ -14,23 +14,22 @@ import (
 	"github.com/0xcafed00d/joystick"
 )
 
-var greenMask uint32 = 0b1
-var redMask uint32 = 0b10
-var blueMask uint32 = 0b100
-var yellowMask uint32 = 0b1000
-var kickMask uint32 = 0b10000
-var kickConnectedMask uint32 = 0b1000000000
-var cymbalMask uint32 = 0b100000
-var tomMask uint32 = 0b10000000000
-var yellowCymbalModMask uint32 = 0b10_000_000_000_000
-var blueCymbalModMask uint32 = 0b100_000_000_000_000
-var greenTomMask uint32 = tomMask | greenMask
-var redTomMask uint32 = tomMask | redMask
-var blueTomMask uint32 = tomMask | blueMask
-var yellowTomMask uint32 = tomMask | yellowMask
-var greenCymbalMask uint32 = cymbalMask | greenMask
-var blueCymbalMask uint32 = cymbalMask | blueMask | blueCymbalModMask
-var yellowCymbalMask uint32 = cymbalMask | yellowMask | yellowCymbalModMask
+const (
+	GREEN_MASK             uint32 = 0b1
+	RED_MASK               uint32 = 0b10
+	BLUE_MASK              uint32 = 0b100
+	YELLOW_MASK            uint32 = 0b1000
+	KICK_MASK              uint32 = 0b10000
+	KICK_CONNECTED_MASK    uint32 = 0b1000000000
+	CYMBAL_MASK            uint32 = 0b100000
+	TOM_MASK               uint32 = 0b10000000000
+	YELLOW_CYMBAL_MOD_MASK uint32 = 0b10_000_000_000_000
+	BLUE_CYMBAL_MOD_MASK   uint32 = 0b100_000_000_000_000
+)
+
+const (
+	FULL_VOLUME = 100
+)
 
 const (
 	GREEN = iota
@@ -47,7 +46,6 @@ const (
 
 var pendingMessages []int = []int{}
 var knownMessages []int = []int{}
-var colors = []int{GREEN, RED, BLUE, YELLOW}
 
 func getColors(messages []int) []int {
 	var result []int
@@ -247,49 +245,47 @@ type BridgeStateHandler struct {
 func (h *BridgeStateHandler) Handle(state joystick.State) error {
 	xor := state.Buttons ^ h.prevState.Buttons
 	var toPrint string
-	if xor&cymbalMask != 0 && state.Buttons&cymbalMask == cymbalMask {
+	if xor&CYMBAL_MASK != 0 && state.Buttons&CYMBAL_MASK == CYMBAL_MASK {
 		toPrint = toPrint + "CYMBAL "
 		pendingMessages = append(pendingMessages, CYMBAL)
 	}
-	if xor&tomMask != 0 && state.Buttons&tomMask == tomMask {
+	if xor&TOM_MASK != 0 && state.Buttons&TOM_MASK == TOM_MASK {
 		toPrint = toPrint + "TOM "
 		pendingMessages = append(pendingMessages, TOM)
 	}
-	if xor&greenMask != 0 && state.Buttons&greenMask == greenMask {
+	if xor&GREEN_MASK != 0 && state.Buttons&GREEN_MASK == GREEN_MASK {
 		toPrint = toPrint + "GREEN "
 		pendingMessages = append(pendingMessages, GREEN)
 	}
-	if xor&redMask != 0 && state.Buttons&redMask == redMask {
+	if xor&RED_MASK != 0 && state.Buttons&RED_MASK == RED_MASK {
 		toPrint = toPrint + "RED "
 		pendingMessages = append(pendingMessages, RED)
 	}
-	if xor&blueMask != 0 && state.Buttons&blueMask == blueMask {
+	if xor&BLUE_MASK != 0 && state.Buttons&BLUE_MASK == BLUE_MASK {
 		toPrint = toPrint + "BLUE "
 		pendingMessages = append(pendingMessages, BLUE)
 	}
-	if xor&yellowMask != 0 && state.Buttons&yellowMask == yellowMask {
+	if xor&YELLOW_MASK != 0 && state.Buttons&YELLOW_MASK == YELLOW_MASK {
 		toPrint = toPrint + "YELLOW "
 		pendingMessages = append(pendingMessages, YELLOW)
 	}
-	if xor&kickMask != 0 && state.Buttons&kickMask == kickMask {
+	if xor&KICK_MASK != 0 && state.Buttons&KICK_MASK == KICK_MASK {
 		toPrint = toPrint + "KICK "
 		pendingMessages = append(pendingMessages, KICK)
 		knownMessages = append(knownMessages, KICK)
 	}
-	if xor&yellowCymbalModMask != 0 && state.Buttons&yellowCymbalModMask == yellowCymbalModMask {
+	if xor&YELLOW_CYMBAL_MOD_MASK != 0 && state.Buttons&YELLOW_CYMBAL_MOD_MASK == YELLOW_CYMBAL_MOD_MASK {
 		toPrint = toPrint + "YCYMBAL MOD "
 		pendingMessages = append(pendingMessages, YELLOW_CYMBAL)
 	}
-	if xor&blueCymbalModMask != 0 && state.Buttons&blueCymbalModMask == blueCymbalModMask {
+	if xor&BLUE_CYMBAL_MOD_MASK != 0 && state.Buttons&BLUE_CYMBAL_MOD_MASK == BLUE_CYMBAL_MOD_MASK {
 		toPrint = toPrint + "BCYMBAL MOD "
 		pendingMessages = append(pendingMessages, BLUE_CYMBAL)
 	}
 
-	if len(toPrint) > 0 {
-		slog.Debug("Changed", "buttons", toPrint)
-	}
+	slog.Debug("Changed", "buttons", toPrint)
 
-	if state.Buttons == kickConnectedMask || state.Buttons == 0 || state.Buttons == kickMask || state.Buttons == (kickMask|kickConnectedMask) {
+	if state.Buttons == KICK_CONNECTED_MASK || state.Buttons == 0 || state.Buttons == KICK_MASK || state.Buttons == (KICK_MASK|KICK_CONNECTED_MASK) {
 		if slices.Contains(pendingMessages, CYMBAL) {
 			if slices.Contains(pendingMessages, YELLOW_CYMBAL) {
 				knownMessages = append(knownMessages, YELLOW_CYMBAL)
@@ -321,36 +317,35 @@ func (h *BridgeStateHandler) Handle(state joystick.State) error {
 			}
 		}
 
-		slog.Debug("Known messages", "msgs", knownMessages)
-		for _, msg := range knownMessages {
-			switch msg {
-			case RED:
-				sendNote(NOTE_SNARE, 100, true)
-			case YELLOW:
-				sendNote(NOTE_TOM1, 100, true)
-			case BLUE:
-				sendNote(NOTE_TOM2, 100, true)
-			case GREEN:
-				sendNote(NOTE_TOM3, 100, true)
-			case YELLOW_CYMBAL:
-				sendNote(NOTE_HIHAT, 100, true)
-			case BLUE_CYMBAL:
-				sendNote(NOTE_RIDE, 100, true)
-			case GREEN_CYMBAL:
-				sendNote(NOTE_CRASH, 100, true)
-			case KICK:
-				sendNote(NOTE_KICK, 100, true)
-			}
+	}
+	slog.Debug("Known messages", "msgs", knownMessages)
+	for _, msg := range knownMessages {
+		switch msg {
+		case RED:
+			sendNote(NOTE_SNARE, FULL_VOLUME, true)
+		case YELLOW:
+			sendNote(NOTE_TOM1, FULL_VOLUME, true)
+		case BLUE:
+			sendNote(NOTE_TOM2, FULL_VOLUME, true)
+		case GREEN:
+			sendNote(NOTE_TOM3, FULL_VOLUME, true)
+		case YELLOW_CYMBAL:
+			sendNote(NOTE_HIHAT, FULL_VOLUME, true)
+		case BLUE_CYMBAL:
+			sendNote(NOTE_RIDE, FULL_VOLUME, true)
+		case GREEN_CYMBAL:
+			sendNote(NOTE_CRASH, FULL_VOLUME, true)
+		case KICK:
+			sendNote(NOTE_KICK, FULL_VOLUME, true)
 		}
-
-		slog.Debug("-------------")
-		knownMessages = []int{}
-		pendingMessages = []int{}
 	}
 
-	if state.Buttons != h.prevState.Buttons {
+	knownMessages = []int{}
+	pendingMessages = []int{}
+	if slog.Default().Enabled(nil, slog.LevelDebug) && state.Buttons != h.prevState.Buttons {
 		slog.Debug("Buttons", "state", fmt.Sprintf("%032b", state.Buttons))
 		h.prevState = state
 	}
+	slog.Debug("-------------")
 	return nil
 }
