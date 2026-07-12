@@ -150,7 +150,9 @@ func listJoysticks(_ *Settings) {
 	}
 }
 
-func play(settings *Settings) {}
+func play(settings *Settings) {
+
+}
 
 func record(settings *Settings) {
 	handler := &RecordStateHandler{}
@@ -318,30 +320,32 @@ func (h *BridgeStateHandler) Handle(state joystick.State) error {
 		}
 
 	}
-	slog.Debug("Known messages", "msgs", knownMessages)
-	for _, msg := range knownMessages {
-		switch msg {
-		case RED:
-			sendNote(NOTE_SNARE, FULL_VOLUME, true)
-		case YELLOW:
-			sendNote(NOTE_TOM1, FULL_VOLUME, true)
-		case BLUE:
-			sendNote(NOTE_TOM2, FULL_VOLUME, true)
-		case GREEN:
-			sendNote(NOTE_TOM3, FULL_VOLUME, true)
-		case YELLOW_CYMBAL:
-			sendNote(NOTE_HIHAT, FULL_VOLUME, true)
-		case BLUE_CYMBAL:
-			sendNote(NOTE_RIDE, FULL_VOLUME, true)
-		case GREEN_CYMBAL:
-			sendNote(NOTE_CRASH, FULL_VOLUME, true)
-		case KICK:
-			sendNote(NOTE_KICK, FULL_VOLUME, true)
+	if state.Buttons == KICK_CONNECTED_MASK || state.Buttons == 0 || state.Buttons == KICK_MASK || state.Buttons == (KICK_MASK|KICK_CONNECTED_MASK) {
+		slog.Debug("Known messages", "msgs", knownMessages)
+		for _, msg := range knownMessages {
+			switch msg {
+			case RED:
+				sendNote(NOTE_SNARE, FULL_VOLUME, true)
+			case YELLOW:
+				sendNote(NOTE_TOM1, FULL_VOLUME, true)
+			case BLUE:
+				sendNote(NOTE_TOM2, FULL_VOLUME, true)
+			case GREEN:
+				sendNote(NOTE_TOM3, FULL_VOLUME, true)
+			case YELLOW_CYMBAL:
+				sendNote(NOTE_HIHAT, FULL_VOLUME, true)
+			case BLUE_CYMBAL:
+				sendNote(NOTE_RIDE, FULL_VOLUME, true)
+			case GREEN_CYMBAL:
+				sendNote(NOTE_CRASH, FULL_VOLUME, true)
+			case KICK:
+				sendNote(NOTE_KICK, FULL_VOLUME, true)
+			}
 		}
-	}
 
-	knownMessages = []int{}
-	pendingMessages = []int{}
+		knownMessages = []int{}
+		pendingMessages = []int{}
+	}
 	if slog.Default().Enabled(nil, slog.LevelDebug) && state.Buttons != h.prevState.Buttons {
 		slog.Debug("Buttons", "state", fmt.Sprintf("%032b", state.Buttons))
 		h.prevState = state
