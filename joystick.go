@@ -393,7 +393,7 @@ func (h *BridgeStateHandler) Handle(state joystick.State) error {
 		knownMessages = []int{}
 		pendingMessages = []int{}
 	}
-	if slog.Default().Enabled(nil, slog.LevelDebug) && state.Buttons != h.prevState.Buttons {
+	if state.Buttons != h.prevState.Buttons {
 		slog.Debug("Buttons", "state", fmt.Sprintf("%032b", state.Buttons))
 		h.prevState = state
 	}
