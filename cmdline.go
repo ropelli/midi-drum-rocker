@@ -42,9 +42,9 @@ var recordCmd = &cobra.Command{
 	},
 }
 
-var playCmd = &cobra.Command{
-	Use:   "play",
-	Short: "Play recorded joystick events from a file, sending MIDI messages",
+var replayCmd = &cobra.Command{
+	Use:   "replay",
+	Short: "Replay recorded joystick events from a file, sending MIDI messages",
 	Run: func(cmd *cobra.Command, args []string) {
 		f, err := cmd.Flags().GetString("input-file")
 		if err != nil {
@@ -54,7 +54,7 @@ var playCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		play(getSettings(cmd), f, ip)
+		replay(getSettings(cmd), f, ip)
 	},
 }
 
@@ -119,8 +119,8 @@ func init() {
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(testMidiCmd)
 	rootCmd.AddCommand(recordCmd)
-	rootCmd.AddCommand(playCmd)
-	playCmd.Flags().StringP("input-file", "f", "-", "Input file to replay, use stdin with -")
-	playCmd.Flags().Bool("ignore-pauses", false, "Ignore pauses between button presses")
+	rootCmd.AddCommand(replayCmd)
+	replayCmd.Flags().StringP("input-file", "f", "-", "Input file to replay, use stdin with -")
+	replayCmd.Flags().Bool("ignore-pauses", false, "Ignore pauses between button presses")
 	rootCmd.AddCommand(listJoysCmd)
 }

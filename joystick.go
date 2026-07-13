@@ -151,7 +151,7 @@ func listJoysticks(_ *Settings) {
 	}
 }
 
-func play(settings *Settings, fileName string, ignorePauses bool) {
+func replay(settings *Settings, fileName string, ignorePauses bool) {
 	initMIDI(settings.midiName)
 	var file *os.File
 	if fileName == "" || fileName == "-" {
@@ -204,10 +204,6 @@ func play(settings *Settings, fileName string, ignorePauses bool) {
 func record(settings *Settings) {
 	handler := &RecordStateHandler{}
 	loop(context.Background(), settings, handler)
-}
-
-type PlayStateHandler struct {
-	stream *os.File
 }
 
 type RecordStateHandler struct {
