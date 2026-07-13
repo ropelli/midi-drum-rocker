@@ -24,7 +24,7 @@ Also, velocity is not supported, so the drum set will always send maximum veloci
 ./midi-drum-rocker --help
 
 # Background mode, use for Steam Launch options for e.g. YARG which supports MIDI input
-/path/to/midi-drum-rocker launch %command%
+/path/to/midi-drum-rocker launch -- %command%
 ```
 
 ## Building
