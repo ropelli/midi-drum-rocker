@@ -46,7 +46,15 @@ var playCmd = &cobra.Command{
 	Use:   "play",
 	Short: "Play recorded joystick events from a file, sending MIDI messages",
 	Run: func(cmd *cobra.Command, args []string) {
-		play(getSettings(cmd))
+		f, err := cmd.Flags().GetString("input-file")
+		if err != nil {
+			panic(err)
+		}
+		ip, err := cmd.Flags().GetBool("ignore-pauses")
+		if err != nil {
+			panic(err)
+		}
+		play(getSettings(cmd), f, ip)
 	},
 }
 
@@ -112,5 +120,7 @@ func init() {
 	rootCmd.AddCommand(testMidiCmd)
 	rootCmd.AddCommand(recordCmd)
 	rootCmd.AddCommand(playCmd)
+	playCmd.Flags().StringP("input-file", "f", "-", "Input file to replay, use stdin with -")
+	playCmd.Flags().Bool("ignore-pauses", false, "Ignore pauses between button presses")
 	rootCmd.AddCommand(listJoysCmd)
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
@@ -150,13 +151,63 @@ func listJoysticks(_ *Settings) {
 	}
 }
 
-func play(settings *Settings) {
+func play(settings *Settings, fileName string, ignorePauses bool) {
+	initMIDI(settings.midiName)
+	var file *os.File
+	if fileName == "" || fileName == "-" {
+		file = os.Stdin
+	} else {
+		file, err := os.Open(fileName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+	}
+	var handler = &BridgeStateHandler{}
+	scanner := bufio.NewScanner(file)
+	var lineNumber = 0
+	for scanner.Scan() {
+		lineNumber++
+		text := scanner.Text()
+		text = strings.TrimSpace(text)
+		if strings.Contains(text, ": ") {
+			value := strings.Split(text, ": ")[1]
+			if !ignorePauses && strings.HasPrefix(text, "duration") {
+				number, err := strconv.Atoi(value)
+				if err != nil {
+					slog.Error("line parse error", "line", lineNumber, "string", value, "error", err)
+				}
+				millis := time.Duration(number)
+				slog.Debug("sleeping", "ms", value)
+				time.Sleep(millis * time.Millisecond)
+			} else if strings.HasPrefix(text, "buttons") {
+				number, err := strconv.ParseUint(value, 2, 64)
+				if err != nil {
+					slog.Error("line parse error", "line", lineNumber, "string", value, "error", err)
+				}
+				num32 := uint32(number)
+				state := joystick.State{
+					Buttons: num32,
+				}
+				handler.Handle(state)
 
+			} else {
+				continue
+			}
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func record(settings *Settings) {
 	handler := &RecordStateHandler{}
 	loop(context.Background(), settings, handler)
+}
+
+type PlayStateHandler struct {
+	stream *os.File
 }
 
 type RecordStateHandler struct {
