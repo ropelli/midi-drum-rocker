@@ -159,7 +159,7 @@ func replay(settings *Settings, fileName string, ignorePauses bool) {
 	} else {
 		file, err := os.Open(fileName)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalln("FATAL", err)
 		}
 		defer file.Close()
 	}
@@ -197,7 +197,7 @@ func replay(settings *Settings, fileName string, ignorePauses bool) {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		log.Fatal("FATAL ", err)
 	}
 }
 
