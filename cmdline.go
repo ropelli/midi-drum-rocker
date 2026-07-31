@@ -25,7 +25,9 @@ var launchCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			ctx, cancel := context.WithCancel(context.Background())
-			go bridge(ctx, getSettings(cmd))
+			s := getSettings(cmd)
+			mp := NewMidiPlayer(s)
+			go bridge(ctx, getSettings(cmd), mp)
 			execCommand(args)
 			cancel()
 		} else {
@@ -54,7 +56,9 @@ var replayCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		replay(getSettings(cmd), f, ip)
+		s := getSettings(cmd)
+		mp := NewMidiPlayer(s)
+		replay(s, f, ip, mp)
 	},
 }
 
@@ -84,7 +88,9 @@ var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run the midi bridge",
 	Run: func(cmd *cobra.Command, args []string) {
-		bridge(context.Background(), getSettings(cmd))
+		s := getSettings(cmd)
+		mp := NewMidiPlayer(s)
+		bridge(context.Background(), s, mp)
 	},
 }
 
@@ -92,7 +98,8 @@ var testMidiCmd = &cobra.Command{
 	Use:   "test-midi",
 	Short: "Test sending MIDI messages",
 	Run: func(cmd *cobra.Command, args []string) {
-		testMidi(getSettings(cmd))
+		mp := NewMidiPlayer(getSettings(cmd))
+		mp.TestMidi()
 	},
 }
 

@@ -21,9 +21,9 @@ const (
 	BLUE_MASK              uint32 = 0b100
 	YELLOW_MASK            uint32 = 0b1000
 	KICK_MASK              uint32 = 0b10000
-	KICK_CONNECTED_MASK    uint32 = 0b1000000000
 	CYMBAL_MASK            uint32 = 0b100000
-	TOM_MASK               uint32 = 0b10000000000
+	KICK_CONNECTED_MASK    uint32 = 0b1_000_000_000
+	TOM_MASK               uint32 = 0b10_000_000_000
 	YELLOW_CYMBAL_MOD_MASK uint32 = 0b10_000_000_000_000
 	BLUE_CYMBAL_MOD_MASK   uint32 = 0b100_000_000_000_000
 )
@@ -57,15 +57,6 @@ func getColors(messages []int) []int {
 		}
 	}
 	return result
-}
-
-func containsOtherColors(messages []int, exclude int) bool {
-	for _, msg := range pendingMessages {
-		if msg != exclude {
-			return true
-		}
-	}
-	return false
 }
 
 func containsSameColorCymbal(messages []int, color int) bool {
@@ -116,6 +107,11 @@ func findIonDrumJoystick(name string) (joystick.Joystick, error) {
 	return nil, fmt.Errorf("%s joystick not found", name)
 }
 
+type NotePlayer interface {
+	Setup() error
+	SendNote(note, vel uint8, on bool)
+}
+
 type StateHandler interface {
 	Handle(state joystick.State) error
 }
@@ -151,19 +147,23 @@ func listJoysticks(_ *Settings) {
 	}
 }
 
-func replay(settings *Settings, fileName string, ignorePauses bool) {
-	initMIDI(settings.midiName)
+func replay(settings *Settings, fileName string, ignorePauses bool, np NotePlayer) {
+	err := np.Setup()
+	if err != nil {
+		log.Fatalln("FATAL", err)
+	}
 	var file *os.File
 	if fileName == "" || fileName == "-" {
 		file = os.Stdin
 	} else {
-		file, err := os.Open(fileName)
+		file, err = os.Open(fileName)
 		if err != nil {
 			log.Fatalln("FATAL", err)
 		}
-		defer file.Close()
 	}
+	defer file.Close()
 	var handler = &BridgeStateHandler{}
+	handler.player = &np
 	scanner := bufio.NewScanner(file)
 	var lineNumber = 0
 	for scanner.Scan() {
@@ -197,7 +197,7 @@ func replay(settings *Settings, fileName string, ignorePauses bool) {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		log.Fatal("FATAL ", err)
+		log.Fatal("FATAL ", "file scanner error: ", err)
 	}
 }
 
@@ -236,12 +236,14 @@ func (h *RecordStateHandler) Handle(state joystick.State) error {
 	return nil
 }
 
-func bridge(ctx context.Context, settings *Settings) {
-	err := initMIDI(settings.midiName)
+func bridge(ctx context.Context, settings *Settings, np NotePlayer) {
+	mp := np
+	err := mp.Setup()
 	if err != nil {
 		log.Fatalln("FATAL ", err)
 	}
 	handler := &BridgeStateHandler{}
+	handler.player = &np
 	loop(ctx, settings, handler)
 }
 
@@ -289,6 +291,7 @@ func loop(ctx context.Context, settings *Settings, handler StateHandler) {
 
 type BridgeStateHandler struct {
 	prevState joystick.State
+	player    *NotePlayer
 }
 
 func (h *BridgeStateHandler) Handle(state joystick.State) error {
@@ -369,24 +372,27 @@ func (h *BridgeStateHandler) Handle(state joystick.State) error {
 	}
 	if state.Buttons == KICK_CONNECTED_MASK || state.Buttons == 0 || state.Buttons == KICK_MASK || state.Buttons == (KICK_MASK|KICK_CONNECTED_MASK) {
 		slog.Debug("Known messages", "msgs", knownMessages)
+		p := h.player
+		player := *p
+
 		for _, msg := range knownMessages {
 			switch msg {
 			case RED:
-				sendNote(NOTE_SNARE, FULL_VOLUME, true)
+				player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
 			case YELLOW:
-				sendNote(NOTE_TOM1, FULL_VOLUME, true)
+				player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
 			case BLUE:
-				sendNote(NOTE_TOM2, FULL_VOLUME, true)
+				player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
 			case GREEN:
-				sendNote(NOTE_TOM3, FULL_VOLUME, true)
+				player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
 			case YELLOW_CYMBAL:
-				sendNote(NOTE_HIHAT, FULL_VOLUME, true)
+				player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
 			case BLUE_CYMBAL:
-				sendNote(NOTE_RIDE, FULL_VOLUME, true)
+				player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
 			case GREEN_CYMBAL:
-				sendNote(NOTE_CRASH, FULL_VOLUME, true)
+				player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
 			case KICK:
-				sendNote(NOTE_KICK, FULL_VOLUME, true)
+				player.SendNote(NOTE_KICK, FULL_VOLUME, true)
 			}
 		}
 

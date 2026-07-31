@@ -26,14 +26,26 @@ const (
 	NOTE_RIDE  = 50
 )
 
-func initMIDI(deviceName string) error {
+type MidiPlayer struct {
+	DeviceName string
+}
+
+var _ NotePlayer = (*MidiPlayer)(nil)
+
+func NewMidiPlayer(s *Settings) *MidiPlayer {
+	mp := MidiPlayer{}
+	mp.DeviceName = s.midiName
+	return &mp
+}
+
+func (p *MidiPlayer) Setup() error {
 	var err error
 	drv, err = rtmididrv.New()
 	if err != nil {
 		return errors.New(fmt.Sprintf("could not open ALSA MIDI driver: %v", err))
 	}
 	// Create a virtual MIDI output port
-	out, err = drv.OpenVirtualOut(deviceName)
+	out, err = drv.OpenVirtualOut(p.DeviceName)
 	if err != nil {
 		return errors.New(fmt.Sprintf("could not open virtual MIDI out: %v", err))
 	}
@@ -41,7 +53,7 @@ func initMIDI(deviceName string) error {
 	return err
 }
 
-func sendNote(note, vel uint8, on bool) {
+func (p *MidiPlayer) SendNote(note, vel uint8, on bool) {
 	var msg midi.Message
 	if on {
 		msg = midi.NoteOn(0, note, vel)
@@ -54,8 +66,8 @@ func sendNote(note, vel uint8, on bool) {
 	}
 }
 
-func testMidi(settings *Settings) {
-	err := initMIDI(settings.midiName)
+func (p *MidiPlayer) TestMidi() {
+	err := p.Setup()
 	if err != nil {
 		log.Fatalln("FATAL ", err)
 	}
@@ -66,9 +78,9 @@ func testMidi(settings *Settings) {
 
 	fmt.Println("Sending test snare hits every 1s...")
 	for {
-		sendNote(38, 100, true) // snare on
+		p.SendNote(38, 100, true) // snare on
 		time.Sleep(1000 * time.Millisecond)
-		sendNote(38, 0, false) // snare off
+		p.SendNote(38, 0, false) // snare off
 		time.Sleep(1 * time.Second)
 	}
 }
