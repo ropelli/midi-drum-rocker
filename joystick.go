@@ -109,7 +109,8 @@ func findIonDrumJoystick(name string) (joystick.Joystick, error) {
 
 type NotePlayer interface {
 	Setup() error
-	SendNote(note, vel uint8, on bool)
+	SendNote(note MidiNote, vel uint8, on bool)
+	Sleep(duration time.Duration)
 }
 
 type StateHandler interface {
@@ -178,8 +179,7 @@ func replay(settings *Settings, fileName string, ignorePauses bool, np NotePlaye
 					slog.Error("line parse error", "line", lineNumber, "string", value, "error", err)
 				}
 				millis := time.Duration(number)
-				slog.Debug("sleeping", "ms", value)
-				time.Sleep(millis * time.Millisecond)
+				np.Sleep(millis * time.Millisecond)
 			} else if strings.HasPrefix(text, "buttons") {
 				number, err := strconv.ParseUint(value, 2, 64)
 				if err != nil {
@@ -367,6 +367,8 @@ func (h *BridgeStateHandler) Handle(state joystick.State) error {
 				}
 
 			}
+		} else if slices.Contains(pendingMessages, CYMBAL) && slices.Contains(pendingMessages, BLUE) && slices.Contains(pendingMessages, YELLOW) {
+			knownMessages = append(knownMessages, YELLOW_CYMBAL, BLUE_CYMBAL)
 		}
 
 	}

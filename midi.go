@@ -15,16 +15,41 @@ import (
 var drv *rtmididrv.Driver
 var out drivers.Out
 
+type MidiNote int
+
 const (
-	NOTE_KICK  = 36
-	NOTE_SNARE = 38
-	NOTE_HIHAT = 42
-	NOTE_TOM1  = 47
-	NOTE_TOM2  = 48
-	NOTE_TOM3  = 41
-	NOTE_CRASH = 49
-	NOTE_RIDE  = 50
+	NOTE_KICK  = MidiNote(36)
+	NOTE_SNARE = MidiNote(38)
+	NOTE_HIHAT = MidiNote(42)
+	NOTE_TOM1  = MidiNote(47)
+	NOTE_TOM2  = MidiNote(48)
+	NOTE_TOM3  = MidiNote(41)
+	NOTE_CRASH = MidiNote(49)
+	NOTE_RIDE  = MidiNote(50)
 )
+
+func (n MidiNote) String() string {
+	switch n {
+	case NOTE_KICK:
+		return "Kick"
+	case NOTE_SNARE:
+		return "Snare"
+	case NOTE_HIHAT:
+		return "HiHat"
+	case NOTE_TOM1:
+		return "Tom1"
+	case NOTE_TOM2:
+		return "Tom2"
+	case NOTE_TOM3:
+		return "Tom3"
+	case NOTE_CRASH:
+		return "Crash"
+	case NOTE_RIDE:
+		return "Ride"
+	default:
+		return fmt.Sprintf("%d", n)
+	}
+}
 
 type MidiPlayer struct {
 	DeviceName string
@@ -53,12 +78,17 @@ func (p *MidiPlayer) Setup() error {
 	return err
 }
 
-func (p *MidiPlayer) SendNote(note, vel uint8, on bool) {
+func (p *MidiPlayer) Sleep(duration time.Duration) {
+	slog.Debug("sleeping", "ms", duration)
+	time.Sleep(duration)
+}
+
+func (p *MidiPlayer) SendNote(note MidiNote, vel uint8, on bool) {
 	var msg midi.Message
 	if on {
-		msg = midi.NoteOn(0, note, vel)
+		msg = midi.NoteOn(0, uint8(note), vel)
 	} else {
-		msg = midi.NoteOff(0, note)
+		msg = midi.NoteOff(0, uint8(note))
 	}
 	err := out.Send(msg)
 	if err != nil {
