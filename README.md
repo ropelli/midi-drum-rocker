@@ -33,6 +33,9 @@ You may need to install dependencies even on top of go dependencies:
 ```sh
 # On fedora:
 sudo dnf install alsa-lib-devel
+
+# On Ubuntu:
+sudo apt install libasound2-dev
 ```
 
 To build the project, run the following command:
