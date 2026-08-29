@@ -4,10 +4,6 @@ on:
   push:
     branches: [ master ]
 
-permissions:
-    contents: write
-    packages: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,10 +19,3 @@ jobs:
         run: go build .
       - name: test
         run: go test -v ./...
-      - uses: wangyoucao577/go-release-action@279495102627de7960cbc33434ab01a12bae144b # @v1.55
-        with:
-          goversion: 1.25.4
-          pre_command: apt-get update && apt-get install -y libasound2-dev
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          goos: linux
-          goarch: amd64
