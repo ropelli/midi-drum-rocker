@@ -14,7 +14,7 @@ jobs:
         with:
           go-version: 1.25.4
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y alsa-lib
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
       - name: build
         run: go build .
       - name: test
