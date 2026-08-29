@@ -29,7 +29,7 @@ Also, velocity is not supported, so the drum set will always send maximum veloci
 
 ## Building
 
-You need to install dependencies even on top of go dependencies:
+You may need to install dependencies even on top of go dependencies:
 ```sh
 # On fedora:
 sudo dnf install alsa-lib-devel
