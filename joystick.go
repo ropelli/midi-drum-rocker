@@ -367,8 +367,13 @@ func (h *BridgeStateHandler) Handle(state joystick.State) error {
 				}
 
 			}
-		} else if slices.Contains(pendingMessages, CYMBAL) && slices.Contains(pendingMessages, BLUE) && slices.Contains(pendingMessages, YELLOW) {
-			knownMessages = append(knownMessages, YELLOW_CYMBAL, BLUE_CYMBAL)
+		} else if slices.Contains(pendingMessages, CYMBAL) {
+			if slices.Contains(pendingMessages, YELLOW) && !slices.Contains(knownMessages, YELLOW_CYMBAL) {
+				knownMessages = append(knownMessages, YELLOW_CYMBAL)
+			}
+			if slices.Contains(pendingMessages, BLUE) && !slices.Contains(knownMessages, BLUE_CYMBAL) {
+				knownMessages = append(knownMessages, BLUE_CYMBAL)
+			}
 		}
 
 	}
