@@ -149,15 +149,15 @@ func TestReplayWithAllNotes(t *testing.T) {
 		"midi",
 		NO_RETRY,
 	}
-	filePath := "all.txt"
+	filePath := "test_data/all.txt"
 	replay(settings, filePath, true, np)
 	np.assertSequence(t, []MidiNote{SETUP, NOTE_HIHAT, NOTE_RIDE, NOTE_CRASH, NOTE_SNARE, NOTE_TOM1, NOTE_TOM2, NOTE_TOM3, NOTE_KICK})
 	np.clear()
-	filePath = "all-pedal-down.txt"
+	filePath = "test_data/all-pedal-down.txt"
 	replay(settings, filePath, true, np)
 	np.assertSequence(t, []MidiNote{SETUP, NOTE_KICK, NOTE_SNARE, NOTE_TOM1, NOTE_TOM2, NOTE_TOM3, NOTE_HIHAT, NOTE_RIDE, NOTE_CRASH, NOTE_KICK})
 	np.clear()
-	filePath = "pedal-to-the-metal.txt"
+	filePath = "test_data/pedal-to-the-metal.txt"
 	replay(settings, filePath, true, np)
 	np.assertSequence(t, []MidiNote{SETUP, NOTE_KICK, NOTE_SNARE, NOTE_TOM1, NOTE_TOM2, NOTE_TOM3, NOTE_HIHAT, NOTE_RIDE, NOTE_CRASH, NOTE_KICK})
 }
@@ -169,7 +169,7 @@ func TestReplayWithHihatAndRideCombo(t *testing.T) {
 		"midi",
 		NO_RETRY,
 	}
-	filePath := "hihat-ride.txt"
+	filePath := "test_data/hihat-ride.txt"
 	replay(settings, filePath, true, np)
 	np.assertSequence(t, []MidiNote{SETUP, NOTE_HIHAT, NOTE_RIDE})
 }
@@ -181,11 +181,11 @@ func TestReplayWithCombos(t *testing.T) {
 		"midi",
 		NO_RETRY,
 	}
-	filePath := "combos.txt"
+	filePath := "test_data/combos.txt"
 	replay(settings, filePath, false, np)
 	np.assertSequence(t, []MidiNote{SETUP, 3956, NOTE_SNARE, NOTE_TOM1, 4536, NOTE_SNARE, NOTE_TOM2, 3412, NOTE_TOM3, NOTE_SNARE, 4728, NOTE_TOM2, NOTE_TOM1, 4736, NOTE_TOM1, NOTE_TOM3, 6192, NOTE_TOM3, NOTE_TOM2, 5608, NOTE_HIHAT, NOTE_SNARE, 4272, NOTE_HIHAT, NOTE_TOM1, 4296, NOTE_HIHAT, NOTE_TOM2, 4248, NOTE_HIHAT, NOTE_TOM3, 9744, NOTE_RIDE, NOTE_SNARE, 4156, NOTE_RIDE, NOTE_TOM1, 4108, NOTE_RIDE, NOTE_TOM2, 4216, NOTE_RIDE, NOTE_TOM3, 5376, NOTE_CRASH, NOTE_SNARE, 3064, NOTE_CRASH, NOTE_TOM1, 3124, NOTE_CRASH, NOTE_TOM2, 4012, NOTE_CRASH, NOTE_TOM3, 8980, NOTE_RIDE, NOTE_HIHAT, 3396, NOTE_CRASH, NOTE_HIHAT, 4383, NOTE_HIHAT, NOTE_RIDE})
 	np.clear()
-	filePath = "combos-with-pedal.txt"
+	filePath = "test_data/combos-with-pedal.txt"
 	replay(settings, filePath, false, np)
 	np.assertSequence(t, []MidiNote{SETUP, 2859, NOTE_KICK, 4960, NOTE_SNARE, 4680, NOTE_SNARE, NOTE_TOM1, 4656, NOTE_SNARE, NOTE_TOM2, 4591, NOTE_TOM3, NOTE_SNARE, 2740, NOTE_TOM2, NOTE_TOM1, 2596, NOTE_TOM3, NOTE_TOM2, 6397, NOTE_TOM1, NOTE_TOM3, 4523, NOTE_HIHAT, NOTE_SNARE, 3456, NOTE_HIHAT, NOTE_TOM1, 3452, NOTE_HIHAT, NOTE_TOM2, 2456, NOTE_HIHAT, NOTE_TOM3, 4772, NOTE_RIDE, NOTE_SNARE, 3444, NOTE_RIDE, NOTE_TOM1, 2432, NOTE_RIDE, NOTE_TOM2, 3452, NOTE_RIDE, NOTE_TOM3, 3112, NOTE_CRASH, NOTE_SNARE, 3460, NOTE_CRASH, NOTE_TOM1, 2440, NOTE_CRASH, NOTE_TOM2, 2460, NOTE_CRASH, NOTE_TOM3, 6612, NOTE_HIHAT, NOTE_RIDE, 3600, NOTE_CRASH, NOTE_HIHAT, 4064, NOTE_RIDE, NOTE_CRASH, 4184})
 }
