@@ -7,7 +7,11 @@ The virtual MIDI device that is automatically created is named `IonDrumBridge`.
 
 ## Issues
 
-Latency is pretty bad at the moment, I am unsure if it can be improved.
+Latency is somewhat bad at the moment, I am unsure if it can be improved.
+Using the drum set in a game like YARG is playable with input calibration.
+I use around 40-50ms input calibration in YARG but haven't measured the actual latency.
+For using the drumset as MIDI controller for music production, the latency is probably too high to be usable.
+
 The project has been tested in Linux only and with XBox 360 version of the drum set.
 The drum set has a wired USB connection and needs to be plugged in before starting the program.
 The program finds the first joystick device whose name is Ion Drum Rocker, so it supports only one drum set at a time.
