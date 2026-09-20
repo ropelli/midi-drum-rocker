@@ -324,7 +324,6 @@ func (h *BridgeStateHandler) Handle(state joystick.State) error {
 	if xor&KICK_MASK != 0 && state.Buttons&KICK_MASK == KICK_MASK {
 		toPrint = toPrint + "KICK "
 		pendingMessages = append(pendingMessages, KICK)
-		knownMessages = append(knownMessages, KICK)
 	}
 	if xor&YELLOW_CYMBAL_MOD_MASK != 0 && state.Buttons&YELLOW_CYMBAL_MOD_MASK == YELLOW_CYMBAL_MOD_MASK {
 		toPrint = toPrint + "YCYMBAL MOD "
@@ -374,6 +373,9 @@ func (h *BridgeStateHandler) Handle(state joystick.State) error {
 			if slices.Contains(pendingMessages, BLUE) && !slices.Contains(knownMessages, BLUE_CYMBAL) {
 				knownMessages = append(knownMessages, BLUE_CYMBAL)
 			}
+		}
+		if slices.Contains(pendingMessages, KICK) && !slices.Contains(knownMessages, KICK) {
+			knownMessages = append(knownMessages, KICK)
 		}
 
 	}
