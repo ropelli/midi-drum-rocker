@@ -226,10 +226,17 @@ func (h *RecordStateHandler) Handle(state joystick.State) error {
 		}
 	}
 	buttons := state.Buttons
+	axisData := state.AxisData
 	if h.stream == nil {
 		h.stream = os.Stdout
 	}
 	_, err := fmt.Fprintf(h.stream, "buttons: %032b\n", buttons)
+	for i, axis := range axisData {
+		_, err := fmt.Fprintf(h.stream, "axis%d: %d\n", i, axis)
+		if err != nil {
+			log.Fatalln("FATAL ", err)
+		}
+	}
 	if err != nil {
 		log.Fatalln("FATAL ", err)
 	}
