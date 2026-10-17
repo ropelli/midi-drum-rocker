@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"regexp"
 	"testing"
 	"time"
 )
@@ -37,6 +38,20 @@ func (p *testableNotePlayer) Sleep(duration time.Duration) {
 		return
 	}
 	p.sequence = append(p.sequence, MidiNote(duration.Milliseconds()+1000)) // +200 to avoid confusion with actual notes
+}
+
+func (p *testableNotePlayer) assertSortedSequence(t *testing.T, expected []MidiNote, message ...string) {
+	sortedActual := sortCombos(p.sequence)
+	sortedExpected := sortCombos(expected)
+	if !reflect.DeepEqual(sortedActual, sortedExpected) {
+		info := ""
+		if len(message) == 1 {
+			info = info + message[0]
+		} else if len(message) > 1 {
+			t.Fatalf("assert message can have one message, got %s", message)
+		}
+		t.Errorf("sequences differ\nactual:   %v\nexpected: %v\n%s", sortedActual, sortedExpected, info)
+	}
 }
 
 func (p *testableNotePlayer) assertSequence(t *testing.T, expected []MidiNote, message ...string) {
@@ -151,15 +166,15 @@ func TestReplayWithAllNotes(t *testing.T) {
 	}
 	filePath := "test_data/all.txt"
 	replay(settings, filePath, true, np)
-	np.assertSequence(t, []MidiNote{SETUP, NOTE_HIHAT, NOTE_RIDE, NOTE_CRASH, NOTE_SNARE, NOTE_TOM1, NOTE_TOM2, NOTE_TOM3, NOTE_KICK})
+	np.assertSequence(t, []MidiNote{SETUP, NOTE_HIHAT, NOTE_RIDE, NOTE_CRASH, NOTE_SNARE, NOTE_TOM1, NOTE_TOM2, NOTE_TOM3, NOTE_KICK}, "all.txt")
 	np.clear()
 	filePath = "test_data/all-pedal-down.txt"
 	replay(settings, filePath, true, np)
-	np.assertSequence(t, []MidiNote{SETUP, NOTE_KICK, NOTE_SNARE, NOTE_TOM1, NOTE_TOM2, NOTE_TOM3, NOTE_HIHAT, NOTE_RIDE, NOTE_CRASH, NOTE_KICK})
+	np.assertSequence(t, []MidiNote{SETUP, NOTE_KICK, NOTE_SNARE, NOTE_TOM1, NOTE_TOM2, NOTE_TOM3, NOTE_HIHAT, NOTE_RIDE, NOTE_CRASH, NOTE_KICK}, "all-pedal-down.txt")
 	np.clear()
 	filePath = "test_data/pedal-to-the-metal.txt"
 	replay(settings, filePath, true, np)
-	np.assertSequence(t, []MidiNote{SETUP, NOTE_KICK, NOTE_SNARE, NOTE_TOM1, NOTE_TOM2, NOTE_TOM3, NOTE_HIHAT, NOTE_RIDE, NOTE_CRASH, NOTE_KICK})
+	np.assertSequence(t, []MidiNote{SETUP, NOTE_KICK, NOTE_SNARE, NOTE_TOM1, NOTE_TOM2, NOTE_TOM3, NOTE_HIHAT, NOTE_RIDE, NOTE_CRASH, NOTE_KICK}, "pedal-to-the-metal.txt")
 }
 
 func TestReplayWithHihatAndRideCombo(t *testing.T) {
@@ -183,12 +198,50 @@ func TestReplayWithCombos(t *testing.T) {
 	}
 	filePath := "test_data/combos.txt"
 	replay(settings, filePath, false, np)
-	np.assertSequence(t, []MidiNote{SETUP, 3956, NOTE_SNARE, NOTE_TOM1, 4536, NOTE_SNARE, NOTE_TOM2, 3412, NOTE_TOM3, NOTE_SNARE, 4728, NOTE_TOM2, NOTE_TOM1, 4736, NOTE_TOM1, NOTE_TOM3, 6192, NOTE_TOM3, NOTE_TOM2, 5608, NOTE_HIHAT, NOTE_SNARE, 4272, NOTE_HIHAT, NOTE_TOM1, 4296, NOTE_HIHAT, NOTE_TOM2, 4248, NOTE_HIHAT, NOTE_TOM3, 9744, NOTE_RIDE, NOTE_SNARE, 4156, NOTE_RIDE, NOTE_TOM1, 4108, NOTE_RIDE, NOTE_TOM2, 4216, NOTE_RIDE, NOTE_TOM3, 5376, NOTE_CRASH, NOTE_SNARE, 3064, NOTE_CRASH, NOTE_TOM1, 3124, NOTE_CRASH, NOTE_TOM2, 4012, NOTE_CRASH, NOTE_TOM3, 8980, NOTE_RIDE, NOTE_HIHAT, 3396, NOTE_CRASH, NOTE_HIHAT, 4383, NOTE_HIHAT, NOTE_RIDE})
+	np.assertSortedSequence(t, []MidiNote{SETUP, 3956, NOTE_SNARE, NOTE_TOM1, 4536, NOTE_SNARE, NOTE_TOM2, 3412, NOTE_TOM3, NOTE_SNARE, 4728, NOTE_TOM2, NOTE_TOM1, 4736, NOTE_TOM1, NOTE_TOM3, 6192, NOTE_TOM3, NOTE_TOM2, 5608, NOTE_HIHAT, NOTE_SNARE, 4272, NOTE_HIHAT, NOTE_TOM1, 4296, NOTE_HIHAT, NOTE_TOM2, 4248, NOTE_HIHAT, NOTE_TOM3, 9744, NOTE_RIDE, NOTE_SNARE, 4156, NOTE_RIDE, NOTE_TOM1, 4108, NOTE_RIDE, NOTE_TOM2, 4216, NOTE_RIDE, NOTE_TOM3, 5376, NOTE_CRASH, NOTE_SNARE, 3064, NOTE_CRASH, NOTE_TOM1, 3124, NOTE_CRASH, NOTE_TOM2, 4012, NOTE_CRASH, NOTE_TOM3, 8980, NOTE_RIDE, NOTE_HIHAT, 3396, NOTE_CRASH, NOTE_HIHAT, 4383, NOTE_HIHAT, NOTE_RIDE})
 	np.clear()
 	filePath = "test_data/combos-with-pedal.txt"
 	replay(settings, filePath, false, np)
-	np.assertSequence(t, []MidiNote{SETUP, 2859, NOTE_KICK, 4960, NOTE_SNARE, 4680, NOTE_SNARE, NOTE_TOM1, 4656, NOTE_SNARE, NOTE_TOM2, 4591, NOTE_TOM3, NOTE_SNARE, 2740, NOTE_TOM2, NOTE_TOM1, 2596, NOTE_TOM3, NOTE_TOM2, 6397, NOTE_TOM1, NOTE_TOM3, 4523, NOTE_HIHAT, NOTE_SNARE, 3456, NOTE_HIHAT, NOTE_TOM1, 3452, NOTE_HIHAT, NOTE_TOM2, 2456, NOTE_HIHAT, NOTE_TOM3, 4772, NOTE_RIDE, NOTE_SNARE, 3444, NOTE_RIDE, NOTE_TOM1, 2432, NOTE_RIDE, NOTE_TOM2, 3452, NOTE_RIDE, NOTE_TOM3, 3112, NOTE_CRASH, NOTE_SNARE, 3460, NOTE_CRASH, NOTE_TOM1, 2440, NOTE_CRASH, NOTE_TOM2, 2460, NOTE_CRASH, NOTE_TOM3, 6612, NOTE_HIHAT, NOTE_RIDE, 3600, NOTE_CRASH, NOTE_HIHAT, 4064, NOTE_RIDE, NOTE_CRASH, 4184})
+	np.assertSortedSequence(t, []MidiNote{SETUP, 2859, NOTE_KICK, 4960, NOTE_SNARE, 4680, NOTE_SNARE, NOTE_TOM1, 4656, NOTE_SNARE, NOTE_TOM2, 4591, NOTE_TOM3, NOTE_SNARE, 2740, NOTE_TOM2, NOTE_TOM1, 2596, NOTE_TOM3, NOTE_TOM2, 6397, NOTE_TOM1, NOTE_TOM3, 4523, NOTE_HIHAT, NOTE_SNARE, 3456, NOTE_HIHAT, NOTE_TOM1, 3452, NOTE_HIHAT, NOTE_TOM2, 2456, NOTE_HIHAT, NOTE_TOM3, 4772, NOTE_RIDE, NOTE_SNARE, 3444, NOTE_RIDE, NOTE_TOM1, 2432, NOTE_RIDE, NOTE_TOM2, 3452, NOTE_RIDE, NOTE_TOM3, 3112, NOTE_CRASH, NOTE_SNARE, 3460, NOTE_CRASH, NOTE_TOM1, 2440, NOTE_CRASH, NOTE_TOM2, 2460, NOTE_CRASH, NOTE_TOM3, 6612, NOTE_HIHAT, NOTE_RIDE, 3600, NOTE_CRASH, NOTE_HIHAT, 4064, NOTE_RIDE, NOTE_CRASH, 4184})
 }
+
+func TestReplayWithSmallCombos(t *testing.T) {
+	assert_small_combo(t, "red.txt", NOTE_SNARE)
+	assert_small_combo(t, "yellow.txt", NOTE_TOM1)
+	assert_small_combo(t, "blue.txt", NOTE_TOM2)
+	assert_small_combo(t, "green.txt", NOTE_TOM3)
+	assert_small_combo(t, "hihat.txt", NOTE_HIHAT)
+	assert_small_combo(t, "ride.txt", NOTE_RIDE)
+	assert_small_combo(t, "crash.txt", NOTE_CRASH)
+	assert_small_combo(t, "red-hihat.txt", NOTE_SNARE, NOTE_HIHAT)
+	assert_small_combo(t, "red-ride.txt", NOTE_SNARE, NOTE_RIDE)
+	assert_small_combo(t, "red-crash.txt", NOTE_SNARE, NOTE_CRASH)
+	assert_small_combo(t, "yellow-hihat.txt", NOTE_TOM1, NOTE_HIHAT)
+	assert_small_combo(t, "yellow-ride.txt", NOTE_TOM1, NOTE_RIDE)
+	assert_small_combo(t, "yellow-crash.txt", NOTE_TOM1, NOTE_CRASH)
+	assert_small_combo(t, "blue-hihat.txt", NOTE_TOM2, NOTE_HIHAT)
+	assert_small_combo(t, "blue-ride.txt", NOTE_TOM2, NOTE_RIDE)
+	assert_small_combo(t, "blue-crash.txt", NOTE_TOM2, NOTE_CRASH)
+	assert_small_combo(t, "green-hihat.txt", NOTE_TOM3, NOTE_HIHAT)
+	assert_small_combo(t, "green-ride.txt", NOTE_TOM3, NOTE_RIDE)
+	assert_small_combo(t, "green-crash.txt", NOTE_TOM3, NOTE_CRASH)
+}
+
+func assert_small_combo(t *testing.T, path string, sequence ...MidiNote) {
+	np := &testableNotePlayer{}
+	settings := &Settings{
+		"js",
+		"midi",
+		NO_RETRY,
+	}
+	filePath := "test_data/with-axis/" + path
+	replay(settings, filePath, true, np)
+	expectedSequence := []MidiNote{SETUP}
+	expectedSequence = append(expectedSequence, sequence...)
+	np.assertSequence(t, expectedSequence, path)
+	np.clear()
+}
+
 func recreateFile(t *testing.T) (string, *os.File, error) {
 	dir := t.TempDir()
 	randomId := rand.IntN(10000)
@@ -198,4 +251,24 @@ func recreateFile(t *testing.T) (string, *os.File, error) {
 		t.Fatal(err)
 	}
 	return filePath, f, err
+}
+
+func sortCombos(notes []MidiNote) []MidiNote {
+	for i := 1; i < len(notes); i++ {
+		prev := notes[i-1]
+		curr := notes[i]
+		// if the string representation of the either note is not a number, then sort them alphabetically
+		prevStr := prev.String()
+		currStr := curr.String()
+		isPrevNumber, _ := regexp.MatchString(`^\d+$`, prevStr)
+		isCurrNumber, _ := regexp.MatchString(`^\d+$`, currStr)
+		if !isPrevNumber && !isCurrNumber {
+			if prevStr > currStr {
+				notes[i-1], notes[i] = notes[i], notes[i-1]
+			}
+			continue
+		}
+	}
+	return notes
+
 }

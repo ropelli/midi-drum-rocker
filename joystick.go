@@ -16,20 +16,75 @@ import (
 )
 
 const (
-	GREEN_MASK             uint32 = 0b1
-	RED_MASK               uint32 = 0b10
-	BLUE_MASK              uint32 = 0b100
-	YELLOW_MASK            uint32 = 0b1000
-	KICK_MASK              uint32 = 0b10000
-	CYMBAL_MASK            uint32 = 0b100000
-	KICK_CONNECTED_MASK    uint32 = 0b1_000_000_000
-	TOM_MASK               uint32 = 0b10_000_000_000
-	YELLOW_CYMBAL_MOD_MASK uint32 = 0b10_000_000_000_000
-	BLUE_CYMBAL_MOD_MASK   uint32 = 0b100_000_000_000_000
+	GREEN_MASK             uint32 = 0b0000_0000_0000_0001
+	RED_MASK               uint32 = 0b0000_0000_0000_0010
+	BLUE_MASK              uint32 = 0b0000_0000_0000_0100
+	YELLOW_MASK            uint32 = 0b0000_0000_0000_1000
+	KICK_MASK              uint32 = 0b0000_0000_0001_0000
+	CYMBAL_MASK            uint32 = 0b0000_0000_0010_0000
+	KICK_CONNECTED_MASK    uint32 = 0b0000_0010_0000_0000
+	TOM_MASK               uint32 = 0b0000_0100_0000_0000
+	UNKNOWN_MASK           uint32 = 0b0000_1000_0000_0000
+	UNKNOWN_MASK2          uint32 = 0b0001_0000_0000_0000
+	YELLOW_CYMBAL_MOD_MASK uint32 = 0b0010_0000_0000_0000
+	BLUE_CYMBAL_MOD_MASK   uint32 = 0b0100_0000_0000_0000
 )
 
 const (
 	FULL_VOLUME = 100
+)
+
+const (
+	SNARE_COMBO  = RED_MASK | TOM_MASK
+	TOM1_COMBO   = YELLOW_MASK | TOM_MASK
+	TOM2_COMBO   = BLUE_MASK | TOM_MASK
+	TOM3_COMBO   = GREEN_MASK | TOM_MASK
+	HIHAT_COMBO  = YELLOW_MASK | UNKNOWN_MASK | CYMBAL_MASK
+	HIHAT2_COMBO = YELLOW_MASK | YELLOW_CYMBAL_MOD_MASK | CYMBAL_MASK
+	RIDE_COMBO   = BLUE_MASK | UNKNOWN_MASK2 | CYMBAL_MASK
+	RIDE2_COMBO  = BLUE_MASK | BLUE_CYMBAL_MOD_MASK | CYMBAL_MASK
+	CRASH_COMBO  = GREEN_MASK | CYMBAL_MASK
+
+	SNARE_TOM1_COMBO   = SNARE_COMBO | TOM1_COMBO
+	SNARE_TOM2_COMBO   = SNARE_COMBO | TOM2_COMBO
+	SNARE_TOM3_COMBO   = SNARE_COMBO | TOM3_COMBO
+	SNARE_HIHAT_COMBO  = SNARE_COMBO | HIHAT_COMBO
+	SNARE_HIHAT2_COMBO = SNARE_COMBO | HIHAT2_COMBO
+	SNARE_RIDE_COMBO   = SNARE_COMBO | RIDE_COMBO
+	SNARE_RIDE2_COMBO  = SNARE_COMBO | RIDE2_COMBO
+	SNARE_CRASH_COMBO  = SNARE_COMBO | CRASH_COMBO
+
+	TOM1_TOM2_COMBO   = TOM1_COMBO | TOM2_COMBO
+	TOM1_TOM3_COMBO   = TOM1_COMBO | TOM3_COMBO
+	TOM1_HIHAT_COMBO  = TOM1_COMBO | HIHAT_COMBO
+	TOM1_HIHAT2_COMBO = TOM1_COMBO | HIHAT2_COMBO
+	TOM1_RIDE_COMBO   = TOM1_COMBO | RIDE_COMBO
+	TOM1_RIDE2_COMBO  = TOM1_COMBO | RIDE2_COMBO
+	TOM1_CRASH_COMBO  = TOM1_COMBO | CRASH_COMBO
+
+	TOM2_TOM3_COMBO   = TOM2_COMBO | TOM3_COMBO
+	TOM2_HIHAT_COMBO  = TOM2_COMBO | HIHAT_COMBO
+	TOM2_HIHAT2_COMBO = TOM2_COMBO | HIHAT2_COMBO
+	TOM2_RIDE_COMBO   = TOM2_COMBO | RIDE_COMBO
+	TOM2_RIDE2_COMBO  = TOM2_COMBO | RIDE2_COMBO
+	TOM2_CRASH_COMBO  = TOM2_COMBO | CRASH_COMBO
+
+	TOM3_HIHAT_COMBO  = TOM3_COMBO | HIHAT_COMBO
+	TOM3_HIHAT2_COMBO = TOM3_COMBO | HIHAT2_COMBO
+	TOM3_RIDE_COMBO   = TOM3_COMBO | RIDE_COMBO
+	TOM3_RIDE2_COMBO  = TOM3_COMBO | RIDE2_COMBO
+	TOM3_CRASH_COMBO  = TOM3_COMBO | CRASH_COMBO
+
+	HIHAT_RIDE_COMBO   = (YELLOW_MASK | RIDE2_COMBO)
+	HIHAT_RIDE_SIMPLE_COMBO = (YELLOW_MASK | BLUE_MASK | CYMBAL_MASK)
+	HIHAT_CRASH_SIMPLE_COMBO = (YELLOW_MASK | GREEN_MASK | CYMBAL_MASK)
+	HIHAT_CRASH_COMBO  = HIHAT_COMBO | CRASH_COMBO
+	HIHAT2_CRASH_COMBO = HIHAT2_COMBO | CRASH_COMBO
+
+	RIDE_CRASH_COMBO = RIDE_COMBO | CRASH_COMBO
+	RIDE2_CRASH_COMBO = RIDE2_COMBO | CRASH_COMBO
+
+	COMBO_FINISHED = KICK_CONNECTED_MASK | KICK_MASK
 )
 
 const (
@@ -189,7 +244,10 @@ func replay(settings *Settings, fileName string, ignorePauses bool, np NotePlaye
 				state := joystick.State{
 					Buttons: num32,
 				}
-				handler.Handle(state)
+				err = handler.Handle(state)
+				if err != nil {
+					log.Fatalln("FATAL ", err)
+				}
 
 			} else {
 				continue
@@ -265,7 +323,10 @@ func loop(ctx context.Context, settings *Settings, handler StateHandler) {
 	slog.Info("Got joystick", "name", jsName)
 	slog.Debug("Joystick", "axis count", js.AxisCount(), "button count", js.ButtonCount())
 	prevState, err := js.Read()
-	handler.Handle(prevState)
+	if err != nil {
+		log.Fatalln("FATAL ", err)
+	}
+	err = handler.Handle(prevState)
 	if err != nil {
 		log.Fatalln("FATAL ", err)
 	}
@@ -291,14 +352,18 @@ func loop(ctx context.Context, settings *Settings, handler StateHandler) {
 		if xor == 0 {
 			continue
 		}
-		handler.Handle(state)
+		err = handler.Handle(state)
+		if err != nil {
+			log.Fatalln("FATAL ", err)
+		}
 		prevState = state
 	}
 }
 
 type BridgeStateHandler struct {
-	prevState joystick.State
-	player    *NotePlayer
+	prevState  joystick.State
+	comboState joystick.State
+	player     *NotePlayer
 }
 
 func (h *BridgeStateHandler) Handle(state joystick.State) error {
@@ -342,79 +407,119 @@ func (h *BridgeStateHandler) Handle(state joystick.State) error {
 	}
 
 	slog.Debug("Changed", "buttons", toPrint)
-
-	if state.Buttons == KICK_CONNECTED_MASK || state.Buttons == 0 || state.Buttons == KICK_MASK || state.Buttons == (KICK_MASK|KICK_CONNECTED_MASK) {
-		if slices.Contains(pendingMessages, CYMBAL) {
-			if slices.Contains(pendingMessages, YELLOW_CYMBAL) {
-				knownMessages = append(knownMessages, YELLOW_CYMBAL)
-			}
-			if slices.Contains(pendingMessages, BLUE_CYMBAL) {
-				knownMessages = append(knownMessages, BLUE_CYMBAL)
-			}
-			if slices.Contains(pendingMessages, CYMBAL) && slices.Contains(pendingMessages, GREEN) {
-				if !slices.Contains(pendingMessages, TOM) {
-					knownMessages = append(knownMessages, GREEN_CYMBAL)
-				} else if slices.Contains(pendingMessages, TOM) {
-					if !slices.Contains(knownMessages, YELLOW_CYMBAL) && !slices.Contains(knownMessages, BLUE_CYMBAL) {
-						knownMessages = append(knownMessages, GREEN_CYMBAL)
-					}
-				}
-			}
-		}
-		if slices.Contains(pendingMessages, TOM) {
-			var pendingColors = getColors(pendingMessages)
-			if len(pendingColors) == 1 {
-				knownMessages = append(knownMessages, pendingColors[0])
-			} else {
-				for _, color := range pendingColors {
-					if !containsSameColorCymbal(knownMessages, color) {
-						knownMessages = append(knownMessages, color)
-					}
-				}
-
-			}
-		} else if slices.Contains(pendingMessages, CYMBAL) {
-			if slices.Contains(pendingMessages, YELLOW) && !slices.Contains(knownMessages, YELLOW_CYMBAL) {
-				knownMessages = append(knownMessages, YELLOW_CYMBAL)
-			}
-			if slices.Contains(pendingMessages, BLUE) && !slices.Contains(knownMessages, BLUE_CYMBAL) {
-				knownMessages = append(knownMessages, BLUE_CYMBAL)
-			}
-		}
-		if slices.Contains(pendingMessages, KICK) && !slices.Contains(knownMessages, KICK) {
-			knownMessages = append(knownMessages, KICK)
-		}
-
-	}
-	if state.Buttons == KICK_CONNECTED_MASK || state.Buttons == 0 || state.Buttons == KICK_MASK || state.Buttons == (KICK_MASK|KICK_CONNECTED_MASK) {
-		slog.Debug("Known messages", "msgs", knownMessages)
+	if xor&KICK_MASK != 0 && state.Buttons&KICK_MASK == KICK_MASK {
 		p := h.player
 		player := *p
-
-		for _, msg := range knownMessages {
-			switch msg {
-			case RED:
-				player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
-			case YELLOW:
-				player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
-			case BLUE:
-				player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
-			case GREEN:
-				player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
-			case YELLOW_CYMBAL:
-				player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
-			case BLUE_CYMBAL:
-				player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
-			case GREEN_CYMBAL:
-				player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
-			case KICK:
-				player.SendNote(NOTE_KICK, FULL_VOLUME, true)
-			}
-		}
-
-		knownMessages = []int{}
-		pendingMessages = []int{}
+		player.SendNote(NOTE_KICK, FULL_VOLUME, true)
 	}
+	if (h.prevState.Buttons &^ COMBO_FINISHED) == 0 {
+		h.comboState.Buttons = state.Buttons
+	} else if (state.Buttons &^ COMBO_FINISHED) != 0 {
+		h.comboState.Buttons = h.comboState.Buttons | state.Buttons
+	} else {
+		p := h.player
+		player := *p
+		noKicks := h.comboState.Buttons &^ COMBO_FINISHED
+		if noKicks == SNARE_COMBO {
+			player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
+		} else if noKicks == TOM1_COMBO {
+			player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
+		} else if noKicks == TOM2_COMBO {
+			player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
+		} else if noKicks == TOM3_COMBO {
+			player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
+		} else if noKicks == HIHAT_COMBO || noKicks == HIHAT2_COMBO {
+			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
+		} else if noKicks == RIDE_COMBO || noKicks == RIDE2_COMBO {
+			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
+		} else if noKicks == CRASH_COMBO {
+			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
+		} else if noKicks == SNARE_TOM1_COMBO {
+			player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
+			player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
+		} else if noKicks == SNARE_TOM2_COMBO {
+			player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
+			player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
+		} else if noKicks == SNARE_TOM3_COMBO {
+			player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
+			player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
+		} else if noKicks == SNARE_HIHAT_COMBO || noKicks == SNARE_HIHAT2_COMBO {
+			player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
+			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
+		} else if noKicks == SNARE_RIDE_COMBO || noKicks == SNARE_RIDE2_COMBO {
+			player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
+			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
+		} else if noKicks == SNARE_CRASH_COMBO {
+			player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
+			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
+		} else if noKicks == TOM1_TOM2_COMBO {
+			player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
+			player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
+		} else if noKicks == TOM1_TOM3_COMBO {
+			player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
+			player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
+		} else if noKicks == TOM1_HIHAT_COMBO || noKicks == TOM1_HIHAT2_COMBO {
+			player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
+			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
+		} else if noKicks == TOM1_RIDE_COMBO || noKicks == TOM1_RIDE2_COMBO {
+			player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
+			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
+		} else if noKicks == TOM1_CRASH_COMBO {
+			player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
+			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
+		} else if noKicks == TOM2_TOM3_COMBO {
+			player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
+			player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
+		} else if noKicks == TOM2_HIHAT_COMBO || noKicks == TOM2_HIHAT2_COMBO {
+			player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
+			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
+		} else if noKicks == TOM2_RIDE_COMBO || noKicks == TOM2_RIDE2_COMBO {
+			player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
+			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
+		} else if noKicks == TOM2_CRASH_COMBO {
+			player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
+			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
+		} else if noKicks == TOM3_HIHAT_COMBO || noKicks == TOM3_HIHAT2_COMBO {
+			player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
+			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
+		} else if noKicks == TOM3_RIDE_COMBO || noKicks == TOM3_RIDE2_COMBO {
+			player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
+			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
+		} else if noKicks == TOM3_CRASH_COMBO {
+			player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
+			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
+		} else if noKicks == HIHAT_RIDE_COMBO {
+			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
+			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
+		} else if noKicks == HIHAT_RIDE_SIMPLE_COMBO {
+			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
+			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
+		} else if noKicks == HIHAT_CRASH_COMBO || noKicks == HIHAT2_CRASH_COMBO {
+			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
+			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
+		} else if noKicks == HIHAT_CRASH_SIMPLE_COMBO {
+			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
+			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
+		} else if noKicks == RIDE_CRASH_COMBO {
+			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
+			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
+		} else if noKicks == RIDE2_CRASH_COMBO {
+			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
+			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
+		} else {
+			binary := fmt.Sprintf("%016b", noKicks)
+			binaryFours := ""
+			for i := range len(binary) {
+				if (len(binary)-i)%4 == 0 {
+					binaryFours = binaryFours + " "
+				}
+				binaryFours = binaryFours + string(binary[i])
+			}
+			binaryFours = strings.Trim(binaryFours, " ")
+			fmt.Println("Unknown combo: " + binaryFours)
+		}
+	}
+
 	if state.Buttons != h.prevState.Buttons {
 		slog.Debug("Buttons", "state", fmt.Sprintf("%032b", state.Buttons))
 		h.prevState = state
