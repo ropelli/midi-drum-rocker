@@ -420,93 +420,85 @@ func (h *BridgeStateHandler) Handle(state joystick.State) error {
 		p := h.player
 		player := *p
 		noKicks := h.comboState.Buttons &^ COMBO_FINISHED
-		if noKicks == SNARE_COMBO {
+		switch noKicks {
+		case SNARE_COMBO:
 			player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
-		} else if noKicks == TOM1_COMBO {
+		case TOM1_COMBO:
 			player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
-		} else if noKicks == TOM2_COMBO {
+		case TOM2_COMBO:
 			player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
-		} else if noKicks == TOM3_COMBO {
+		case TOM3_COMBO:
 			player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
-		} else if noKicks == HIHAT_COMBO || noKicks == HIHAT2_COMBO {
+		case HIHAT_COMBO, HIHAT2_COMBO:
 			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
-		} else if noKicks == RIDE_COMBO || noKicks == RIDE2_COMBO {
+		case RIDE_COMBO, RIDE2_COMBO:
 			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
-		} else if noKicks == CRASH_COMBO {
+		case CRASH_COMBO:
 			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
-		} else if noKicks == SNARE_TOM1_COMBO {
+		case SNARE_TOM1_COMBO:
 			player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
 			player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
-		} else if noKicks == SNARE_TOM2_COMBO {
+		case SNARE_TOM2_COMBO:
 			player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
 			player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
-		} else if noKicks == SNARE_TOM3_COMBO {
+		case SNARE_TOM3_COMBO:
 			player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
 			player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
-		} else if noKicks == SNARE_HIHAT_COMBO || noKicks == SNARE_HIHAT2_COMBO {
+		case SNARE_HIHAT_COMBO, SNARE_HIHAT2_COMBO:
 			player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
 			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
-		} else if noKicks == SNARE_RIDE_COMBO || noKicks == SNARE_RIDE2_COMBO {
+		case SNARE_RIDE_COMBO, SNARE_RIDE2_COMBO:
 			player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
 			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
-		} else if noKicks == SNARE_CRASH_COMBO {
+		case SNARE_CRASH_COMBO:
 			player.SendNote(NOTE_SNARE, FULL_VOLUME, true)
 			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
-		} else if noKicks == TOM1_TOM2_COMBO {
+		case TOM1_TOM2_COMBO:
 			player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
 			player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
-		} else if noKicks == TOM1_TOM3_COMBO {
+		case TOM1_TOM3_COMBO:
 			player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
 			player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
-		} else if noKicks == TOM1_HIHAT_COMBO || noKicks == TOM1_HIHAT2_COMBO {
+		case TOM1_HIHAT_COMBO, TOM1_HIHAT2_COMBO:
 			player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
 			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
-		} else if noKicks == TOM1_RIDE_COMBO || noKicks == TOM1_RIDE2_COMBO {
+		case TOM1_RIDE_COMBO, TOM1_RIDE2_COMBO:
 			player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
 			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
-		} else if noKicks == TOM1_CRASH_COMBO {
+		case TOM1_CRASH_COMBO:
 			player.SendNote(NOTE_TOM1, FULL_VOLUME, true)
 			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
-		} else if noKicks == TOM2_TOM3_COMBO {
+		case TOM2_TOM3_COMBO:
 			player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
 			player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
-		} else if noKicks == TOM2_HIHAT_COMBO || noKicks == TOM2_HIHAT2_COMBO {
+		case TOM2_HIHAT_COMBO, TOM2_HIHAT2_COMBO:
 			player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
 			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
-		} else if noKicks == TOM2_RIDE_COMBO || noKicks == TOM2_RIDE2_COMBO {
+		case TOM2_RIDE_COMBO, TOM2_RIDE2_COMBO:
 			player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
 			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
-		} else if noKicks == TOM2_CRASH_COMBO {
+		case TOM2_CRASH_COMBO:
 			player.SendNote(NOTE_TOM2, FULL_VOLUME, true)
 			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
-		} else if noKicks == TOM3_HIHAT_COMBO || noKicks == TOM3_HIHAT2_COMBO {
+		case TOM3_HIHAT_COMBO, TOM3_HIHAT2_COMBO:
 			player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
 			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
-		} else if noKicks == TOM3_RIDE_COMBO || noKicks == TOM3_RIDE2_COMBO {
+		case TOM3_RIDE_COMBO, TOM3_RIDE2_COMBO:
 			player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
 			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
-		} else if noKicks == TOM3_CRASH_COMBO {
+		case TOM3_CRASH_COMBO:
 			player.SendNote(NOTE_TOM3, FULL_VOLUME, true)
 			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
-		} else if noKicks == HIHAT_RIDE_COMBO {
+		case HIHAT_RIDE_SIMPLE_COMBO, HIHAT_RIDE_COMBO:
 			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
 			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
-		} else if noKicks == HIHAT_RIDE_SIMPLE_COMBO {
-			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
-			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
-		} else if noKicks == HIHAT_CRASH_COMBO || noKicks == HIHAT2_CRASH_COMBO {
+		case HIHAT_CRASH_COMBO, HIHAT2_CRASH_COMBO, HIHAT_CRASH_SIMPLE_COMBO:
 			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
 			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
-		} else if noKicks == HIHAT_CRASH_SIMPLE_COMBO {
-			player.SendNote(NOTE_HIHAT, FULL_VOLUME, true)
-			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
-		} else if noKicks == RIDE_CRASH_COMBO {
+		case RIDE_CRASH_COMBO, RIDE2_CRASH_COMBO:
 			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
 			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
-		} else if noKicks == RIDE2_CRASH_COMBO {
-			player.SendNote(NOTE_RIDE, FULL_VOLUME, true)
-			player.SendNote(NOTE_CRASH, FULL_VOLUME, true)
-		} else {
+		default:
 			binary := fmt.Sprintf("%016b", noKicks)
 			binaryFours := ""
 			for i := range len(binary) {
