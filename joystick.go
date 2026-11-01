@@ -100,9 +100,6 @@ const (
 	GREEN_CYMBAL
 )
 
-var pendingMessages []int = []int{}
-var knownMessages []int = []int{}
-
 func getColors(messages []int) []int {
 	var result []int
 	for _, msg := range messages {
@@ -371,39 +368,30 @@ func (h *BridgeStateHandler) Handle(state joystick.State) error {
 	var toPrint string
 	if xor&CYMBAL_MASK != 0 && state.Buttons&CYMBAL_MASK == CYMBAL_MASK {
 		toPrint = toPrint + "CYMBAL "
-		pendingMessages = append(pendingMessages, CYMBAL)
 	}
 	if xor&TOM_MASK != 0 && state.Buttons&TOM_MASK == TOM_MASK {
 		toPrint = toPrint + "TOM "
-		pendingMessages = append(pendingMessages, TOM)
 	}
 	if xor&GREEN_MASK != 0 && state.Buttons&GREEN_MASK == GREEN_MASK {
 		toPrint = toPrint + "GREEN "
-		pendingMessages = append(pendingMessages, GREEN)
 	}
 	if xor&RED_MASK != 0 && state.Buttons&RED_MASK == RED_MASK {
 		toPrint = toPrint + "RED "
-		pendingMessages = append(pendingMessages, RED)
 	}
 	if xor&BLUE_MASK != 0 && state.Buttons&BLUE_MASK == BLUE_MASK {
 		toPrint = toPrint + "BLUE "
-		pendingMessages = append(pendingMessages, BLUE)
 	}
 	if xor&YELLOW_MASK != 0 && state.Buttons&YELLOW_MASK == YELLOW_MASK {
 		toPrint = toPrint + "YELLOW "
-		pendingMessages = append(pendingMessages, YELLOW)
 	}
 	if xor&KICK_MASK != 0 && state.Buttons&KICK_MASK == KICK_MASK {
 		toPrint = toPrint + "KICK "
-		pendingMessages = append(pendingMessages, KICK)
 	}
 	if xor&YELLOW_CYMBAL_MOD_MASK != 0 && state.Buttons&YELLOW_CYMBAL_MOD_MASK == YELLOW_CYMBAL_MOD_MASK {
 		toPrint = toPrint + "YCYMBAL MOD "
-		pendingMessages = append(pendingMessages, YELLOW_CYMBAL)
 	}
 	if xor&BLUE_CYMBAL_MOD_MASK != 0 && state.Buttons&BLUE_CYMBAL_MOD_MASK == BLUE_CYMBAL_MOD_MASK {
 		toPrint = toPrint + "BCYMBAL MOD "
-		pendingMessages = append(pendingMessages, BLUE_CYMBAL)
 	}
 
 	slog.Debug("Changed", "buttons", toPrint)
