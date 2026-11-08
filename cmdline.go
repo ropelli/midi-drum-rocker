@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -71,16 +72,26 @@ var listJoysCmd = &cobra.Command{
 }
 
 func getSettings(cmd *cobra.Command) *Settings {
-	bool, err := cmd.Root().Flags().GetBool("debug")
+	debug, err := cmd.Root().Flags().GetBool("debug")
 	if err != nil {
 		panic(err)
 	}
-	if bool {
+	if debug {
 		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})))
 	}
+	useKeyboard, err := cmd.Root().Flags().GetBool("keyboard")
+	if err != nil {
+		panic(err)
+	}
+	kickDelay, err := cmd.Root().Flags().GetInt("kick-delay")
+	if err != nil {
+		panic(err)
+	}
 	return &Settings{
+		kickDelay: time.Duration(kickDelay)*time.Millisecond,
 		joyName:  cmd.Root().Flag("joy-name").Value.String(),
 		midiName: cmd.Root().Flag("midi-device").Value.String(),
+		useKeyboard: useKeyboard,
 	}
 }
 
@@ -120,6 +131,8 @@ func parseArgs() {
 
 func init() {
 	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug logging")
+	rootCmd.PersistentFlags().Bool("keyboard", false, "Use keyboard input instead of joystick for inputs")
+	rootCmd.PersistentFlags().IntP("kick-delay", "k", 0, "Delay in milliseconds for kick drum input")
 	rootCmd.PersistentFlags().StringP("joy-name", "j", "Ion Drum Rocker", "Name of the joystick to use")
 	rootCmd.PersistentFlags().StringP("midi-device", "d", "IonDrumBridge", "Name of the midi device to create")
 	rootCmd.AddCommand(launchCmd)

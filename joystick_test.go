@@ -68,11 +68,7 @@ func (p *testableNotePlayer) assertSequence(t *testing.T, expected []MidiNote, m
 
 func TestReplayOnEmptyFileRunsFine(t *testing.T) {
 	np := &testableNotePlayer{}
-	settings := &Settings{
-		"js",
-		"midi",
-		NO_RETRY,
-	}
+	settings := GetDefaultSettings()
 	dir := t.TempDir()
 	filePath := path.Join(dir, "foobar")
 	f, err := os.Create(filePath)
@@ -87,11 +83,7 @@ func TestReplayOnEmptyFileRunsFine(t *testing.T) {
 
 func TestReplayOnZeroDurationRunsFine(t *testing.T) {
 	np := &testableNotePlayer{}
-	settings := &Settings{
-		"js",
-		"midi",
-		NO_RETRY,
-	}
+	settings := GetDefaultSettings()
 	dir := t.TempDir()
 	filePath := path.Join(dir, "foobar")
 	f, err := os.Create(filePath)
@@ -106,11 +98,7 @@ func TestReplayOnZeroDurationRunsFine(t *testing.T) {
 
 func TestReplayWithSnareSendsCorrectNote(t *testing.T) {
 	np := &testableNotePlayer{}
-	settings := &Settings{
-		"js",
-		"midi",
-		NO_RETRY,
-	}
+	settings := GetDefaultSettings()
 	// Kick not connected
 	filePath, f, err := recreateFile(t)
 	if err != nil {
@@ -159,11 +147,7 @@ func TestReplayWithSnareSendsCorrectNote(t *testing.T) {
 
 func TestReplayWithAllNotes(t *testing.T) {
 	np := &testableNotePlayer{}
-	settings := &Settings{
-		"js",
-		"midi",
-		NO_RETRY,
-	}
+	settings := GetDefaultSettings()
 	filePath := "test_data/all.txt"
 	replay(settings, filePath, true, np)
 	np.assertSequence(t, []MidiNote{SETUP, NOTE_HIHAT, NOTE_RIDE, NOTE_CRASH, NOTE_SNARE, NOTE_TOM1, NOTE_TOM2, NOTE_TOM3, NOTE_KICK}, "all.txt")
@@ -179,11 +163,7 @@ func TestReplayWithAllNotes(t *testing.T) {
 
 func TestReplayWithHihatAndRideCombo(t *testing.T) {
 	np := &testableNotePlayer{}
-	settings := &Settings{
-		"js",
-		"midi",
-		NO_RETRY,
-	}
+	settings := GetDefaultSettings()
 	filePath := "test_data/hihat-ride.txt"
 	replay(settings, filePath, true, np)
 	np.assertSequence(t, []MidiNote{SETUP, NOTE_HIHAT, NOTE_RIDE})
@@ -191,11 +171,7 @@ func TestReplayWithHihatAndRideCombo(t *testing.T) {
 
 func TestReplayWithCombos(t *testing.T) {
 	np := &testableNotePlayer{}
-	settings := &Settings{
-		"js",
-		"midi",
-		NO_RETRY,
-	}
+	settings := GetDefaultSettings()
 	filePath := "test_data/combos.txt"
 	replay(settings, filePath, false, np)
 	np.assertSortedSequence(t, []MidiNote{SETUP, 3956, NOTE_SNARE, NOTE_TOM1, 4536, NOTE_SNARE, NOTE_TOM2, 3412, NOTE_TOM3, NOTE_SNARE, 4728, NOTE_TOM2, NOTE_TOM1, 4736, NOTE_TOM1, NOTE_TOM3, 6192, NOTE_TOM3, NOTE_TOM2, 5608, NOTE_HIHAT, NOTE_SNARE, 4272, NOTE_HIHAT, NOTE_TOM1, 4296, NOTE_HIHAT, NOTE_TOM2, 4248, NOTE_HIHAT, NOTE_TOM3, 9744, NOTE_RIDE, NOTE_SNARE, 4156, NOTE_RIDE, NOTE_TOM1, 4108, NOTE_RIDE, NOTE_TOM2, 4216, NOTE_RIDE, NOTE_TOM3, 5376, NOTE_CRASH, NOTE_SNARE, 3064, NOTE_CRASH, NOTE_TOM1, 3124, NOTE_CRASH, NOTE_TOM2, 4012, NOTE_CRASH, NOTE_TOM3, 8980, NOTE_RIDE, NOTE_HIHAT, 3396, NOTE_CRASH, NOTE_HIHAT, 4383, NOTE_HIHAT, NOTE_RIDE})
@@ -229,11 +205,7 @@ func TestReplayWithSmallCombos(t *testing.T) {
 
 func assert_small_combo(t *testing.T, path string, sequence ...MidiNote) {
 	np := &testableNotePlayer{}
-	settings := &Settings{
-		"js",
-		"midi",
-		NO_RETRY,
-	}
+	settings := GetDefaultSettings()
 	filePath := "test_data/with-axis/" + path
 	replay(settings, filePath, true, np)
 	expectedSequence := []MidiNote{SETUP}
@@ -270,5 +242,4 @@ func sortCombos(notes []MidiNote) []MidiNote {
 		}
 	}
 	return notes
-
 }

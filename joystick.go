@@ -124,7 +124,16 @@ func containsSameColorCymbal(messages []int, color int) bool {
 	}
 }
 
-func findIonDrumJoystick(name string) (joystick.Joystick, error) {
+func findIonDrumJoystick(settings *Settings) (joystick.Joystick, error) {
+	if settings.useKeyboard {
+		kb, err := NewKeyboard()
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize keyboard: %v", err)
+		}
+		go kb.Handle()
+		return kb, nil
+	}
+	name := settings.joyName
 	numJoysticks := 0
 	joystickPath := "/dev/input"
 	// get the number of joysticks by checking for existing device files by direct file access
@@ -167,6 +176,14 @@ type NotePlayer interface {
 
 type StateHandler interface {
 	Handle(state joystick.State) error
+}
+
+func SendDelayedNote(player *NotePlayer, note MidiNote, vel uint8, on bool, delay time.Duration) {
+	go func() {
+		p := *player
+		p.Sleep(delay)
+		p.SendNote(note, vel, on)
+	}()
 }
 
 func listJoysticks(_ *Settings) {
@@ -217,6 +234,7 @@ func replay(settings *Settings, fileName string, ignorePauses bool, np NotePlaye
 	defer file.Close()
 	var handler = &BridgeStateHandler{}
 	handler.player = &np
+	handler.kickDelay = settings.kickDelay
 	scanner := bufio.NewScanner(file)
 	var lineNumber = 0
 	for scanner.Scan() {
@@ -306,11 +324,12 @@ func bridge(ctx context.Context, settings *Settings, np NotePlayer) {
 	}
 	handler := &BridgeStateHandler{}
 	handler.player = &np
+    handler.kickDelay = settings.kickDelay
 	loop(ctx, settings, handler)
 }
 
 func loop(ctx context.Context, settings *Settings, handler StateHandler) {
-	js, err := findIonDrumJoystick(settings.joyName)
+	js, err := findIonDrumJoystick(settings)
 	if err != nil {
 		log.Fatalln("FATAL ", err)
 	}
@@ -361,6 +380,7 @@ type BridgeStateHandler struct {
 	prevState  joystick.State
 	comboState joystick.State
 	player     *NotePlayer
+    kickDelay  time.Duration
 }
 
 func (h *BridgeStateHandler) Handle(state joystick.State) error {
@@ -396,9 +416,13 @@ func (h *BridgeStateHandler) Handle(state joystick.State) error {
 
 	slog.Debug("Changed", "buttons", toPrint)
 	if xor&KICK_MASK != 0 && state.Buttons&KICK_MASK == KICK_MASK {
-		p := h.player
-		player := *p
-		player.SendNote(NOTE_KICK, FULL_VOLUME, true)
+		if h.kickDelay > 0 {
+			SendDelayedNote(h.player, NOTE_KICK, FULL_VOLUME, true, h.kickDelay)
+		} else {
+			p := h.player
+			player := *p
+			player.SendNote(NOTE_KICK, FULL_VOLUME, true)
+		}
 	}
 	if (h.prevState.Buttons &^ COMBO_FINISHED) == 0 {
 		h.comboState.Buttons = state.Buttons
