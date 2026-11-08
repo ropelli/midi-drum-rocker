@@ -88,9 +88,9 @@ func getSettings(cmd *cobra.Command) *Settings {
 		panic(err)
 	}
 	return &Settings{
-		kickDelay: time.Duration(kickDelay)*time.Millisecond,
-		joyName:  cmd.Root().Flag("joy-name").Value.String(),
-		midiName: cmd.Root().Flag("midi-device").Value.String(),
+		kickDelay:   time.Duration(kickDelay) * time.Millisecond,
+		joyName:     cmd.Root().Flag("joy-name").Value.String(),
+		midiName:    cmd.Root().Flag("midi-device").Value.String(),
 		useKeyboard: useKeyboard,
 	}
 }

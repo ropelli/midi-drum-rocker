@@ -75,13 +75,13 @@ const (
 	TOM3_RIDE2_COMBO  = TOM3_COMBO | RIDE2_COMBO
 	TOM3_CRASH_COMBO  = TOM3_COMBO | CRASH_COMBO
 
-	HIHAT_RIDE_COMBO   = (YELLOW_MASK | RIDE2_COMBO)
-	HIHAT_RIDE_SIMPLE_COMBO = (YELLOW_MASK | BLUE_MASK | CYMBAL_MASK)
+	HIHAT_RIDE_COMBO         = (YELLOW_MASK | RIDE2_COMBO)
+	HIHAT_RIDE_SIMPLE_COMBO  = (YELLOW_MASK | BLUE_MASK | CYMBAL_MASK)
 	HIHAT_CRASH_SIMPLE_COMBO = (YELLOW_MASK | GREEN_MASK | CYMBAL_MASK)
-	HIHAT_CRASH_COMBO  = HIHAT_COMBO | CRASH_COMBO
-	HIHAT2_CRASH_COMBO = HIHAT2_COMBO | CRASH_COMBO
+	HIHAT_CRASH_COMBO        = HIHAT_COMBO | CRASH_COMBO
+	HIHAT2_CRASH_COMBO       = HIHAT2_COMBO | CRASH_COMBO
 
-	RIDE_CRASH_COMBO = RIDE_COMBO | CRASH_COMBO
+	RIDE_CRASH_COMBO  = RIDE_COMBO | CRASH_COMBO
 	RIDE2_CRASH_COMBO = RIDE2_COMBO | CRASH_COMBO
 
 	COMBO_FINISHED = KICK_CONNECTED_MASK | KICK_MASK
@@ -324,7 +324,7 @@ func bridge(ctx context.Context, settings *Settings, np NotePlayer) {
 	}
 	handler := &BridgeStateHandler{}
 	handler.player = &np
-    handler.kickDelay = settings.kickDelay
+	handler.kickDelay = settings.kickDelay
 	loop(ctx, settings, handler)
 }
 
@@ -380,7 +380,7 @@ type BridgeStateHandler struct {
 	prevState  joystick.State
 	comboState joystick.State
 	player     *NotePlayer
-    kickDelay  time.Duration
+	kickDelay  time.Duration
 }
 
 func (h *BridgeStateHandler) Handle(state joystick.State) error {

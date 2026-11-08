@@ -1,6 +1,6 @@
 package main_test
 
-import(
+import (
 	"github.com/0xcafed00d/joystick"
 	"ropelli/midi-drum-rocker"
 	"testing"
@@ -37,4 +37,3 @@ func TestKeyboard_Read(t *testing.T) {
 		})
 	}
 }
-

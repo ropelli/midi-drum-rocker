@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"slices"
 	"log/slog"
+	"slices"
 
 	"github.com/0xcafed00d/joystick"
 	goinput "github.com/AndrewDonelson/go-input"
@@ -12,7 +12,7 @@ import (
 )
 
 type Keyboard struct {
-	kb *keyboard.Watcher
+	kb   *keyboard.Watcher
 	devs []*evdev.InputDevice
 }
 
@@ -42,16 +42,16 @@ func NewKeyboard() (*Keyboard, error) {
 }
 
 var codeToKey = map[evdev.EvCode]keyboard.Key{
-	evdev.KEY_Q: keyboard.Q,
-	evdev.KEY_W: keyboard.W,
-	evdev.KEY_E: keyboard.E,
-	evdev.KEY_R: keyboard.R,
-	evdev.KEY_T: keyboard.T,
-	evdev.KEY_Y: keyboard.Y,
-	evdev.KEY_U: keyboard.U,
-	evdev.KEY_I: keyboard.I,
-	evdev.KEY_O: keyboard.O,
-	evdev.KEY_P: keyboard.P,
+	evdev.KEY_Q:          keyboard.Q,
+	evdev.KEY_W:          keyboard.W,
+	evdev.KEY_E:          keyboard.E,
+	evdev.KEY_R:          keyboard.R,
+	evdev.KEY_T:          keyboard.T,
+	evdev.KEY_Y:          keyboard.Y,
+	evdev.KEY_U:          keyboard.U,
+	evdev.KEY_I:          keyboard.I,
+	evdev.KEY_O:          keyboard.O,
+	evdev.KEY_P:          keyboard.P,
 	evdev.KEY_LEFTBRACE:  keyboard.LeftBracket,
 	evdev.KEY_RIGHTBRACE: keyboard.RightBracket,
 	evdev.KEY_A:          keyboard.A,
@@ -77,38 +77,38 @@ var codeToKey = map[evdev.EvCode]keyboard.Key{
 }
 
 var keysToBit = map[keyboard.Key]int{
-	keyboard.Q: 31,
-	keyboard.W: 30,
-	keyboard.E: 29,
-	keyboard.R: 28,
-	keyboard.T: 27,
-	keyboard.Y: 26,
-	keyboard.U: 25,
-	keyboard.I: 24,
-	keyboard.O: 23,
-	keyboard.P: 22,
-	keyboard.LeftBracket: 21,
+	keyboard.Q:            31,
+	keyboard.W:            30,
+	keyboard.E:            29,
+	keyboard.R:            28,
+	keyboard.T:            27,
+	keyboard.Y:            26,
+	keyboard.U:            25,
+	keyboard.I:            24,
+	keyboard.O:            23,
+	keyboard.P:            22,
+	keyboard.LeftBracket:  21,
 	keyboard.RightBracket: 20,
-	keyboard.A: 19,
-	keyboard.S: 18,
-	keyboard.D: 17,
-	keyboard.F: 16,
-	keyboard.G: 15,
-	keyboard.H: 14,
-	keyboard.J: 13,
-	keyboard.K: 12,
-	keyboard.L: 11,
-	keyboard.Semicolon: 10,
-	keyboard.Apostrophe: 9,
-	keyboard.BackSlash: 8,
-	keyboard.Z: 7,
-	keyboard.X: 6,
-	keyboard.C: 5,
-	keyboard.V: 4,
-	keyboard.B: 3,
-	keyboard.N: 2,
-	keyboard.M: 1,
-	keyboard.Comma: 0,
+	keyboard.A:            19,
+	keyboard.S:            18,
+	keyboard.D:            17,
+	keyboard.F:            16,
+	keyboard.G:            15,
+	keyboard.H:            14,
+	keyboard.J:            13,
+	keyboard.K:            12,
+	keyboard.L:            11,
+	keyboard.Semicolon:    10,
+	keyboard.Apostrophe:   9,
+	keyboard.BackSlash:    8,
+	keyboard.Z:            7,
+	keyboard.X:            6,
+	keyboard.C:            5,
+	keyboard.V:            4,
+	keyboard.B:            3,
+	keyboard.N:            2,
+	keyboard.M:            1,
+	keyboard.Comma:        0,
 }
 
 func (k *Keyboard) AxisCount() int {
