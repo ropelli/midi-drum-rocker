@@ -1,0 +1,87 @@
+Input driver version is 1.0.1
+Input device ID: bus 0x3 vendor 0x1bad product 0x130 version 0x100
+Input device name: "Ion Drum Rocker"
+Input device physical location: usb-0000:67:00.0-2/input0
+Supported events:
+  Event type 0 (EV_SYN)
+  Event type 1 (EV_KEY)
+    Event code 314 (BTN_SELECT) state false
+    Event code 318 (BTN_THUMBR) state false
+    Event code 544 (BTN_DPAD_UP) state false
+    Event code 545 (BTN_DPAD_DOWN) state false
+    Event code 305 (BTN_EAST/BTN_B) state false
+    Event code 308 (BTN_WEST/BTN_Y) state false
+    Event code 315 (BTN_START) state false
+    Event code 546 (BTN_DPAD_LEFT) state false
+    Event code 307 (BTN_NORTH/BTN_X) state false
+    Event code 317 (BTN_THUMBL) state true
+    Event code 547 (BTN_DPAD_RIGHT) state false
+    Event code 316 (BTN_MODE) state false
+    Event code 310 (BTN_TL) state false
+    Event code 311 (BTN_TR) state false
+    Event code 304 (BTN_GAMEPAD/BTN_SOUTH/BTN_A) state false
+  Event type 3 (EV_ABS)
+    Event code 0 (ABS_X)
+      Value: 0
+      Min: -32768
+      Max: 32767
+      Fuzz: 16
+      Flat: 128
+    Event code 1 (ABS_Y)
+      Value: -71
+      Min: -32768
+      Max: 32767
+      Fuzz: 16
+      Flat: 128
+    Event code 2 (ABS_Z)
+      Value: 0
+      Min: 0
+      Max: 255
+    Event code 3 (ABS_RX)
+      Value: -71
+      Min: -32768
+      Max: 32767
+      Fuzz: 16
+      Flat: 128
+    Event code 4 (ABS_RY)
+      Value: -71
+      Min: -32768
+      Max: 32767
+      Fuzz: 16
+      Flat: 128
+    Event code 5 (ABS_RZ)
+      Value: 0
+      Min: 0
+      Max: 255
+  Event type 21 (EV_FF)
+Properties:
+Testing ... (interrupt to exit)
+Event: time 1789899954.497618, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 17222
+Event: time 1789899954.501379, type: 0x01 [EV_KEY], code: 0x13e [BTN_THUMBR], value: 1
+Event: time 1789899954.501379, type: 0x01 [EV_KEY], code: 0x134 [BTN_WEST/BTN_Y], value: 1
+Event: time 1789899954.501379, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 7911
+Event: time 1789899954.504852, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 7841
+Event: time 1789899954.537201, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 7771
+Event: time 1789899954.620851, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 28004
+Event: time 1789899954.624875, type: 0x01 [EV_KEY], code: 0x13e [BTN_THUMBR], value: 1
+Event: time 1789899954.624875, type: 0x01 [EV_KEY], code: 0x134 [BTN_WEST/BTN_Y], value: 1
+Event: time 1789899954.624875, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 17362
+Event: time 1789899954.645039, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 17432
+Event: time 1789899954.649154, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 17292
+Event: time 1789899954.657651, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 17432
+Event: time 1789899954.661766, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 17362
+Event: time 1789899954.880853, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 32767
+Event: time 1789899954.884867, type: 0x01 [EV_KEY], code: 0x13e [BTN_THUMBR], value: 1
+Event: time 1789899954.884867, type: 0x01 [EV_KEY], code: 0x134 [BTN_WEST/BTN_Y], value: 1
+Event: time 1789899954.884867, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 7911
+Event: time 1789899954.893358, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 7771
+Event: time 1789899954.896853, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 7841
+Event: time 1789899954.905212, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 7771
+Event: time 1789899955.005377, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 17362
+Event: time 1789899955.013231, type: 0x01 [EV_KEY], code: 0x13e [BTN_THUMBR], value: 1
+Event: time 1789899955.013231, type: 0x01 [EV_KEY], code: 0x134 [BTN_WEST/BTN_Y], value: 1
+Event: time 1789899955.013231, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 7841
+Event: time 1789899955.020855, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 7771
+Event: time 1789899955.037390, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 7841
+Event: time 1789899955.041765, type: 0x03 [EV_ABS], code: 0x01 [ABS_Y], value: 7771
+Event: time 1789899955.272831, type: 0x01 [EV_KEY], code: 0x13e [BTN_THUMBR], value: 1
